@@ -1,3 +1,21 @@
 node_modules/
 logs/
 *.log
+
+# Personal AI workflow state - never commit
+# Remove individual entries only when the team intentionally adopts shared guidance.
+/AGENTS.md
+/CLAUDE.md
+/CLAUDE.local.md
+/.agents/
+/.claude/
+/.codex/
+/.specify/
+/specs/
+/.collab/
+
+# Personal Copilot guidance; shared CI and workflows remain tracked
+/.github/copilot-instructions.md
+/.github/instructions/
+/.github/prompts/
+/.github/skills/
