@@ -2,6 +2,12 @@ node_modules/
 logs/
 *.log
 
+# Secrets and private config; config.local.json is the SHADOW_CONFIG override
+.env
+.env.*
+!.env.example
+config.local.json
+
 # Personal AI workflow state - never commit
 # Remove individual entries only when the team intentionally adopts shared guidance.
 /AGENTS.md
