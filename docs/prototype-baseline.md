@@ -142,7 +142,11 @@ npm --version
 npm ls --depth=0
 $env:NODE_OPTIONS = "--use-system-ca"
 npm audit --json
-node --check server.js game.js llm.js config.js logger.js data.map.js public/app.js
+'server.js', 'game.js', 'llm.js', 'config.js', 'logger.js', 'data.map.js', 'public/app.js' |
+  ForEach-Object {
+    node --check $_
+    if ($LASTEXITCODE -ne 0) { throw "Syntax check failed: $_" }
+  }
 ```
 
 Issue #4 owns clean-install and end-to-end verification of the README's

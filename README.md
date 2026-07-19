@@ -72,6 +72,7 @@ select the supported runtime.
    PowerShell:
 
    ```powershell
+   Get-Content config.local.json -Raw | ConvertFrom-Json | Out-Null
    $env:SHADOW_CONFIG = "config.local.json"
    npm start
    ```
@@ -79,8 +80,17 @@ select the supported runtime.
    Bash-compatible shell:
 
    ```bash
+   test -f config.local.json
    SHADOW_CONFIG=config.local.json npm start
    ```
+
+   Set `SHADOW_CONFIG` in every shell that starts the server; it is scoped to
+   the current shell session. If it is unset, the prototype silently loads the
+   committed `config.json`, where RED and broad logging are enabled. If the
+   selected path is missing or its JSON cannot be parsed, the loader silently
+   applies schema defaults instead; those defaults keep RED and logging
+   disabled, but may not use the seed or port you intended. The validation
+   command above catches malformed JSON before PowerShell starts the server.
 
 4. Open <http://127.0.0.1:3000>. Select a dealt operation card, choose a legal
    map target, and commit the turn. With RED disabled, the staff planner
@@ -149,6 +159,12 @@ debugging.
 - Several diagnostic build IDs and `diag_*` paths are temporary prototype
   scaffolding.
 
+The current dependency tree also has one high and three moderate affected
+packages. See the
+[read-only security inventory](docs/prototype-baseline.md#read-only-security-inventory)
+for the recorded advisories and their #5/#6 disposition; no risk has been
+silently accepted.
+
 The sanitized reference capture in issue #3 records selected behavior for
 comparison without turning these defects into future requirements.
 
@@ -171,7 +187,11 @@ The prototype has no build, lint, typecheck, or automated test command. Its
 current syntax gate is:
 
 ```powershell
-node --check server.js game.js llm.js config.js logger.js data.map.js public/app.js
+'server.js', 'game.js', 'llm.js', 'config.js', 'logger.js', 'data.map.js', 'public/app.js' |
+  ForEach-Object {
+    node --check $_
+    if ($LASTEXITCODE -ne 0) { throw "Syntax check failed: $_" }
+  }
 ```
 
 Dependency and runtime decisions belong to issues #5 and #6; do not treat the
