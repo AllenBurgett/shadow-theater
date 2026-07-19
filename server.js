@@ -165,7 +165,7 @@ app.get("/api/logs/download", (req, res) => {
   await makeState(config.server.seed);
 
   const port = config.server.port;
-  app.listen(port, () => {
+  app.listen(port, "127.0.0.1", () => {
     console.log(`Shadow Theater running on http://127.0.0.1:${port}`);
     console.log(`GAME_BUILD_ID=${GAME_BUILD_ID}`);
     console.log(`LLM_BUILD_ID=${LLM_BUILD_ID}`);
