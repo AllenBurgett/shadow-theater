@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shadow Theater v1</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">Shadow Theater v1</div>
+      <div class="meta">
+        <span id="seed"></span>
+        <span id="turn"></span>
+        <button id="newGameBtn">New Game</button>
+      </div>
+    </header>
+
+    <div id="gameOverBanner" class="gameOverBanner hidden"></div>
+
+    <main>
+      <section class="left">
+        <div class="panel">
+          <h2>Map</h2>
+          <div id="mapWrap"></div>
+          <div class="hint" id="targetHint">Select a card, then click a target.</div>
+        </div>
+
+        <div class="panel">
+          <h2>Briefing</h2>
+          <div class="small" id="constraint"></div>
+          <div id="aar"></div>
+        </div>
+      </section>
+
+      <section class="right">
+        <div class="panel">
+          <h2>Resources</h2>
+          <div class="grid2">
+            <div>CP</div><div id="cp"></div>
+            <div>ISR</div><div id="isr"></div>
+            <div>Political</div><div id="pol"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Objectives</h2>
+          <div class="objTitle">Public • Blue</div>
+          <ul id="objBlue"></ul>
+          <div class="objTitle">Public • Red</div>
+          <ul id="objRed"></ul>
+          <div class="objTitle">Secret • Blue</div>
+          <ul id="objBlueSecret"></ul>
+        </div>
+
+        <div class="panel">
+          <h2>Operations (Blue)</h2>
+          <div class="small">All cards are shown; greyed-out cards are not currently dealt.</div>
+          <div id="hand"></div>
+
+          <div class="cardDetails" id="cardDetails"></div>
+
+          <h3>Planned Ops</h3>
+          <ol id="planned"></ol>
+          <div class="row">
+            <button id="commitBtn">Commit Turn</button>
+            <button id="clearBtn">Clear</button>
+          </div>
+          <div class="small warn" id="errors"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Region Intel</h2>
+          <div id="regions"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

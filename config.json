@@ -1,0 +1,52 @@
+{
+  "server": {
+    "port": 3000,
+    "seed": "VESPERA-01"
+  },
+  "logging": {
+    "enabled": true,
+    "dir": "./logs",
+    "keepInMemory": 500,
+    "includeRawLlmText": true,
+    "includeRedView": true
+  },
+  "llm": {
+    "red": {
+      "enabled": true,
+      "baseUrl": "http://127.0.0.1:5000",
+      "apiKey": "",
+      "adminKey": "",
+      "model": "Olmo-3.1-32B-Think-Q5_K_M.gguf",
+      "autoLoad": {
+        "enabled": true,
+        "modelName": "Olmo-3.1-32B-Think-Q5_K_M.gguf",
+        "args": {},
+        "settings": {},
+        "waitForLoadMs": 300000
+      },
+      "ooba": {
+        "mode": "chat-instruct",
+        "instructionTemplate": ""
+      },
+      "sampling": {
+        "temperature": 0.2,
+        "maxTokens": 900,
+        "topP": 0.95,
+        "topK": 20,
+        "stop": []
+      },
+      "timeoutMs": 45000
+    },
+    "gm": {
+      "enabled": false,
+      "baseUrl": "http://127.0.0.1:5000",
+      "apiKey": "",
+      "adminKey": "",
+      "model": "local-model",
+      "autoLoad": { "enabled": false, "waitForLoadMs": 300000 },
+      "ooba": { "mode": "chat-instruct", "instructionTemplate": "" },
+      "sampling": { "temperature": 0.35, "maxTokens": 900, "topP": 0.9, "topK": 40, "stop": [] },
+      "timeoutMs": 45000
+    }
+  }
+}
