@@ -1,6 +1,7 @@
 node_modules/
 logs/
 *.log
+.tmp
 
 # Secrets and private config; config.local.json is the SHADOW_CONFIG override
 .env
