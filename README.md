@@ -80,8 +80,8 @@ select the supported runtime.
    Bash-compatible shell:
 
    ```bash
-   test -f config.local.json
-   SHADOW_CONFIG=config.local.json npm start
+   node -e "JSON.parse(require('fs').readFileSync('config.local.json','utf8'))" &&
+     SHADOW_CONFIG=config.local.json npm start
    ```
 
    Set `SHADOW_CONFIG` in every shell that starts the server; it is scoped to
@@ -89,8 +89,12 @@ select the supported runtime.
    committed `config.json`, where RED and broad logging are enabled. If the
    selected path is missing or its JSON cannot be parsed, the loader silently
    applies schema defaults instead; those defaults keep RED and logging
-   disabled, but may not use the seed or port you intended. The validation
-   command above catches malformed JSON before PowerShell starts the server.
+   disabled, but may not use the seed or port you intended. If the JSON parses
+   but violates the schema—a wrong type or an out-of-range value—the loader
+   throws instead and the server does not start; that error is always labelled
+   `Invalid config.json` even when `SHADOW_CONFIG` selected a different file.
+   The validation commands above catch a missing or malformed file before
+   either shell starts the server.
 
 4. Open <http://127.0.0.1:3000>. Select a dealt operation card, choose a legal
    map target, and commit the turn. With RED disabled, the staff planner
@@ -132,8 +136,11 @@ wired into this prototype.
 
 If you deliberately enable the current adapter, keep `apiKey` and `adminKey`
 only in ignored `config.local.json`, keep `baseUrl` local, and choose the model
-and auto-load settings supported by your local server. Never commit credentials
-or local model configuration.
+and auto-load settings supported by your local server. Never commit credentials.
+The committed `config.json` does carry prototype model defaults—`baseUrl`,
+`model`, auto-load, and sampling—with empty credential fields; keep your own
+machine-specific model settings in `config.local.json` rather than editing
+those defaults.
 
 ## Logging and sensitive data
 
