@@ -24,16 +24,18 @@ every current mechanic or API will survive modernization.
 - There is no database, account system, multiplayer, cloud service, build step,
   lint configuration, or automated test suite.
 
-The target stack and the retain/replace disposition of Express and Zod will be
-decided in [issue #5](https://github.com/AllenBurgett/shadow-theater/issues/5).
+The retain/replace disposition of Express and Zod was decided on
+[issue #5](https://github.com/AllenBurgett/shadow-theater/issues/5) on
+2026-08-23 (recorded provisionally, pending Allen's itemized ratification):
+both are retained, and the prototype now runs Express 5 and Zod 4 per issue #6.
 The observed prototype inventory is recorded in
 [`docs/prototype-baseline.md`](docs/prototype-baseline.md).
 
 ## Safe quick start without an LLM
 
-This snapshot was documented with Node `v24.15.0` and npm `10.2.3`. Those are
-observed reproduction versions, not the future support policy; issue #5 will
-select the supported runtime.
+This snapshot was documented with Node `v24.15.0` and npm `10.2.3`. Those
+remain the observed reproduction versions. The supported runtime is now
+declared as Node `>=24` in `package.json` (`engines`).
 
 1. Install the locked dependencies:
 
@@ -201,5 +203,6 @@ current syntax gate is:
   }
 ```
 
-Dependency and runtime decisions belong to issues #5 and #6; do not treat the
-versions in this README as ratified target-stack choices.
+The dependency and runtime dispositions are recorded on issue #5, and the
+retained dependencies are current per issue #6. Target-stack ratification of
+the remaining flagged items is Allen's follow-up on issue #5.

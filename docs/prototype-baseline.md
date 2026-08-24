@@ -24,23 +24,27 @@ approved upgrades for dependencies that #5 retains.
 The application uses built-in `fetch`, `AbortController`, and
 `structuredClone`, so its actual runtime floor is newer than the absence of an
 `engines` field suggests. This inventory does not infer or declare that floor;
-issue #5 must select and document a supported Node line.
+issue #5 must select and document a supported Node line. Resolved: issue #5
+selected Node 24 LTS, and issue #6 declared `"engines": { "node": ">=24" }` in
+`package.json`.
 
 ## Direct dependency ownership
 
 Values below come from `package.json`, `package-lock.json`, and
-`npm ls --depth=0` on the snapshot date.
+`npm ls --depth=0` on the snapshot date. The Requested and Resolved columns are
+that historical snapshot and predate the issue #6 upgrade; the Decision column
+records what was decided and shipped since.
 
-| Dependency | Requested | Resolved | Current responsibility | Decision owner |
+| Dependency | Requested | Resolved | Current responsibility | Decision |
 |---|---:|---:|---|---|
-| Express | `^4.19.2` | `4.22.1` | JSON parsing, static browser assets, HTTP routes, downloads, and loopback listener in `server.js` | #5: retain/upgrade/replace |
-| Zod | `^3.23.8` | `3.25.76` | JSON configuration validation/defaults in `config.js`; generated RED operation validation in `llm.js` | #5: retain/upgrade/replace |
+| Express | `^4.19.2` | `4.22.1` | JSON parsing, static browser assets, HTTP routes, downloads, and loopback listener in `server.js` | #5: retained — upgraded to `^5.2.1` by #6 |
+| Zod | `^3.23.8` | `3.25.76` | JSON configuration validation/defaults in `config.js`; generated RED operation validation in `llm.js` | #5: retained — upgraded to `^4.4.3` by #6 |
 
-No package is declared retained merely because the prototype currently uses
-it. Per the approved Milestone 0 policy, #6 upgrades current stable,
-mutually-compatible versions only for dependencies #5 retains. A dependency
-selected for replacement stays pinned unless it blocks an approved retained
-dependency from upgrading.
+No package was declared retained merely because the prototype used it. Per the
+approved Milestone 0 policy, #6 upgraded to current stable,
+mutually-compatible versions only for the dependencies #5 retained. A
+dependency selected for replacement stays pinned unless it blocks an approved
+retained dependency from upgrading.
 
 ## Read-only security inventory
 
@@ -66,6 +70,11 @@ Audit summary: 4 affected packages (1 high, 3 moderate, 0 critical). No
 dependency or lockfile was changed by issue #2, and these findings are not yet
 accepted risk. Milestone 0 issue #4 cannot close until #6 fixes urgent findings
 or Allen explicitly accepts the remaining risk.
+
+Resolved: the issue #6 upgrade to Express `^5.2.1` and Zod `^4.4.3` cleared all
+four findings above. `npm audit` on the upgraded lockfile reports
+`found 0 vulnerabilities`, so no finding required an accepted-risk decision.
+The table remains the snapshot-date record.
 
 ## Runtime shape and ownership
 
@@ -125,7 +134,9 @@ local override.
   behavior, provided in-repo consumers migrate in the accepted slice.
 - Zod owns two real boundaries: local configuration and generated model orders.
   #5 must decide whether those schemas migrate to current Zod or another
-  approved boundary validator.
+  approved boundary validator. Resolved: #5 selected Zod 4 as the validation
+  library at every external/generated boundary (decision D6), and #6 upgraded
+  the prototype to Zod 4.
 - The rules, HTTP transport, model adapter, logging, and browser presentation
   are flat modules with direct coupling. The durable target boundary is a pure
   deterministic engine separated from those adapters.
