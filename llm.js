@@ -6,7 +6,7 @@ export const LLM_BUILD_ID = "llm-redview-immutability-2026-03-01a";
 const CanonicalOpSchema = z.object({
   card_id: z.string(),
   targets: z.array(z.object({ target_type: z.enum(["REGION", "LINK"]), target_id: z.string() })).min(1),
-  parameters: z.record(z.any()).optional(),
+  parameters: z.record(z.string(), z.any()).optional(),
   notes: z.string().optional()
 });
 

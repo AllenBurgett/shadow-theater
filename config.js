@@ -10,11 +10,11 @@ const AutoLoadSchema = z
   .object({
     enabled: z.boolean().default(false),
     modelName: z.string().min(1).optional(),
-    args: z.record(z.any()).optional(),
-    settings: z.record(z.any()).optional(),
+    args: z.record(z.string(), z.any()).optional(),
+    settings: z.record(z.string(), z.any()).optional(),
     waitForLoadMs: z.number().int().min(1000).max(600000).default(300000)
   })
-  .default({});
+  .prefault({});
 
 const LlmProfileSchema = z
   .object({
@@ -29,7 +29,7 @@ const LlmProfileSchema = z
         mode: z.string().default(""),
         instructionTemplate: z.string().default("")
       })
-      .default({}),
+      .prefault({}),
     sampling: z
       .object({
         temperature: z.number().min(0).max(2).default(0.2),
@@ -38,10 +38,10 @@ const LlmProfileSchema = z
         topK: z.number().int().min(0).optional(),
         stop: z.array(z.string()).optional()
       })
-      .default({}),
+      .prefault({}),
     timeoutMs: z.number().int().min(1000).max(300000).default(30000)
   })
-  .default({});
+  .prefault({});
 
 const LoggingSchema = z
   .object({
@@ -51,7 +51,7 @@ const LoggingSchema = z
     includeRawLlmText: z.boolean().default(true),
     includeRedView: z.boolean().default(true)
   })
-  .default({});
+  .prefault({});
 
 const ConfigSchema = z
   .object({
@@ -60,16 +60,16 @@ const ConfigSchema = z
         port: z.number().int().min(1).max(65535).default(3000),
         seed: z.string().min(1).default("VESPERA-01")
       })
-      .default({}),
+      .prefault({}),
     logging: LoggingSchema,
     llm: z
       .object({
-        red: LlmProfileSchema.default({}),
-        gm: LlmProfileSchema.default({})
+        red: LlmProfileSchema.prefault({}),
+        gm: LlmProfileSchema.prefault({})
       })
-      .default({})
+      .prefault({})
   })
-  .default({});
+  .prefault({});
 
 export function loadConfig() {
   const cfgPath = process.env.SHADOW_CONFIG
