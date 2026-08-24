@@ -26,6 +26,8 @@ const EXPECTED_PATH = path.join(FIXTURE_DIR, "expected.json");
 const PORT = Number(process.env.REFERENCE_PORT || 3117);
 const BASE = `http://127.0.0.1:${PORT}`;
 const STARTUP_TIMEOUT_MS = 30000;
+const SHUTDOWN_TIMEOUT_MS = 5000;
+const SIGKILL_TIMEOUT_MS = 2000;
 
 /* ---------- sanitization and normalization ---------- */
 
@@ -139,16 +141,26 @@ function writeTempConfig() {
   return { dir, file };
 }
 
-async function waitForReady() {
+// Polls readiness, but gives up as soon as the child is known to be dead: a
+// server that cannot spawn or that exits on a startup error would otherwise
+// only be reported after the full startup timeout, and without its own message.
+async function waitForReady(server) {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
   while (Date.now() < deadline) {
     try {
       const res = await fetch(`${BASE}/api/version`);
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        server.ready = true;
+        return await res.json();
+      }
     } catch {
       // server not listening yet
     }
-    await new Promise((r) => setTimeout(r, 200));
+    // The poll interval doubles as the window in which a dead child wins.
+    const poll = delay(200, null);
+    const failure = await Promise.race([server.failure, poll.promise]);
+    poll.cancel();
+    if (failure) throw failure;
   }
   throw new Error(`Server did not become ready on ${BASE} within ${STARTUP_TIMEOUT_MS}ms`);
 }
@@ -161,12 +173,61 @@ function startServer(configFile) {
   });
   const stderr = [];
   child.stderr.on("data", (d) => stderr.push(d.toString()));
-  child.on("exit", (code) => {
-    if (code !== 0 && code !== null) {
-      process.stderr.write(`server exited with code ${code}\n${stderr.join("")}`);
-    }
+
+  // Terminal state of the child, as a promise that resolves with an Error
+  // rather than rejecting: the expected exit at shutdown must not become an
+  // unhandled rejection once nothing is waiting on it any more.
+  child.ready = false;
+  child.failure = new Promise((resolve) => {
+    child.once("error", (err) => {
+      resolve(new Error(`server process failed to start: ${err.message}${trailingStderr(stderr)}`));
+    });
+    child.once("exit", (code, signal) => {
+      const how = signal ? `signal ${signal}` : `code ${code}`;
+      const failure = new Error(`server exited before becoming ready (${how})${trailingStderr(stderr)}`);
+      resolve(failure);
+      // Before readiness, waitForReady throws this and the message is seen. A
+      // crash after readiness resolves nothing anyone is waiting on, so report
+      // it here; a signal means this script did the killing.
+      if (child.ready && code !== 0 && code !== null && !signal) {
+        process.stderr.write(`server exited with code ${code}${trailingStderr(stderr)}\n`);
+      }
+    });
   });
   return child;
+}
+
+function trailingStderr(stderr) {
+  const text = stderr.join("").trim();
+  return text ? `\n${text}` : "";
+}
+
+// A timed branch of a race. The loser must be cancelled: a pending timer keeps
+// the event loop alive long after the race is decided.
+function delay(ms, value) {
+  let timer;
+  const promise = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(value), ms);
+  });
+  return { promise, cancel: () => clearTimeout(timer) };
+}
+
+// SIGTERM, then SIGKILL if the child is still up, so the port is released
+// before the next run and the server never outlives this process.
+async function stopServer(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const exited = new Promise((resolve) => child.once("exit", () => resolve(true)));
+
+  child.kill();
+  const term = delay(SHUTDOWN_TIMEOUT_MS, false);
+  const stopped = await Promise.race([exited, term.promise]);
+  term.cancel();
+  if (stopped) return;
+
+  child.kill("SIGKILL");
+  const hard = delay(SIGKILL_TIMEOUT_MS, false);
+  await Promise.race([exited, hard.promise]);
+  hard.cancel();
 }
 
 async function postJson(url, body) {
@@ -190,7 +251,7 @@ async function capture() {
   const server = startServer(file);
 
   try {
-    const version = await waitForReady();
+    const version = await waitForReady(server);
     const newGame = await postJson(`${BASE}/api/new`, { seed: sequence.seed });
 
     const steps = [];
@@ -217,7 +278,7 @@ async function capture() {
       steps
     };
   } finally {
-    server.kill();
+    await stopServer(server);
     try {
       fs.rmSync(dir, { recursive: true, force: true });
     } catch {
