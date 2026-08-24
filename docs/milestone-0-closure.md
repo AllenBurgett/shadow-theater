@@ -231,15 +231,17 @@ These lists overlap deliberately: the fixture records what a run actually did,
 the roadmap records what the reset owes a decision on, and the README records
 what a person running the prototype today should expect.
 
-## Open follow-ups
+## Follow-ups
 
 - **Itemized ratification of the stack decision — resolved 2026-08-24.**
   Allen ratified the whole decision record on
   [issue #5](https://github.com/AllenBurgett/shadow-theater/issues/5), on the
   recorded basis that every selection is backed by researched best practice
-  (`research.md`, verified 2026-08-23). The Milestone 1 implementation gate
-  is open; Milestone 1 proceeds through its own full-Specify artifacts using
-  the ratified stack.
+  (the version-verification research of 2026-08-23, kept with the other
+  stack-decision artifacts in the intentionally untracked local
+  `specs/001-foundation-stack/` directory and summarized on issue #5). The
+  Milestone 1 implementation gate is open; Milestone 1 proceeds through its
+  own full-Specify artifacts using the ratified stack.
 - **Prototype defect triage.** The deviations above are Milestone 1 inputs and
   need explicit resolve/test/discard decisions during the foundation spec, not
   incidental fixes.
