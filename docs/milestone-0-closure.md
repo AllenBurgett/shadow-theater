@@ -16,8 +16,11 @@ is authority to proceed but not an itemized ratification. Decisions **D2**
 (TypeScript 7 over 6), **D5** (Express 5 over Fastify), **D8** (Tailwind
 adoption timing), **D10** (REST first) and **D15** (`stream:false` for Ollama
 order generation) still await Allen's itemized ratification on issue #5, and
-D10/D15 deviate from a roadmap recommendation row. Milestone 1 implementation
-does not begin until that ratification is recorded.
+D10/D15 deviate from a roadmap recommendation row. Those five are the calls
+flagged for attention; the ratification act covers the whole provisional
+record, so Allen may amend any decision, including **D6** (Zod 4), whose
+amendment — like D5's — would reopen issue #6's shipped upgrade. Milestone 1
+implementation does not begin until that ratification is recorded.
 
 ## Exit conditions
 
@@ -29,7 +32,7 @@ Conditions are the roadmap's Milestone 0 "Closure" list.
 | README and reference fixture exist | Met | [`README.md`](../README.md); [`fixtures/reference-001/`](../fixtures/reference-001/) and [`tools/capture-reference.mjs`](../tools/capture-reference.mjs) from [#3](https://github.com/AllenBurgett/shadow-theater/issues/3) via [PR #8](https://github.com/AllenBurgett/shadow-theater/pull/8) |
 | Baseline checks and known deviations are recorded | Met | [`docs/prototype-baseline.md`](prototype-baseline.md) from [#2](https://github.com/AllenBurgett/shadow-theater/issues/2) via [PR #7](https://github.com/AllenBurgett/shadow-theater/pull/7); deviations per [Known deviations](#known-deviations-carried-into-milestone-1) below; this document records the checks |
 | Allen has explicitly ratified the constitution | Met | Constitution v1.2.0 ratified 2026-07-18 |
-| Allen has approved the stack decision | **Met provisionally** | [#5](https://github.com/AllenBurgett/shadow-theater/issues/5) and `specs/001-foundation-stack/plan.md`; recorded under the quoted 2026-08-23 directive, pending itemized ratification of D2/D5/D8/D10/D15 |
+| Allen has approved the stack decision | **Met provisionally** | The decision summary on [#5](https://github.com/AllenBurgett/shadow-theater/issues/5); the full artifacts live in the intentionally untracked local `specs/001-foundation-stack/` directory (`specs/` is git-ignored by design). Recorded under the quoted 2026-08-23 directive, pending itemized ratification of D2/D5/D8/D10/D15 |
 | Retained dependencies are current under that decision | Met | Express `^5.2.1`, Zod `^4.4.3`, `engines.node >=24` from [#6](https://github.com/AllenBurgett/shadow-theater/issues/6) via [PR #9](https://github.com/AllenBurgett/shadow-theater/pull/9); checks 1, 3 and 4 below |
 | Issue #4 records all closure evidence on the approved runtime | Met | This document; every check below ran on Node `v24.15.0` |
 
@@ -216,13 +219,13 @@ describes the code at this revision, including the Express 5 and Zod 4 upgrade.
 Milestone 0 records prototype defects; it does not fix them, and none of them
 is a requirement for the replacement.
 
-- The six numbered behaviours observed while capturing the reference sequence
+- The six numbered behaviors observed while capturing the reference sequence
   are in
   [`fixtures/reference-001/README.md`](../fixtures/reference-001/README.md#recorded-deviations).
-- The ten prototype behaviours the reset must resolve, deliberately test, or
+- The ten prototype behaviors the reset must resolve, deliberately test, or
   explicitly discard are the bulleted list under "What the Prototype Proved" in
   the product roadmap.
-- The seven user-facing limitations summarised for players are under
+- The seven user-facing limitations summarized for players are under
   [Known prototype limitations](../README.md#known-prototype-limitations).
 
 These lists overlap deliberately: the fixture records what a run actually did,
@@ -232,13 +235,15 @@ what a person running the prototype today should expect.
 ## Open follow-ups
 
 - **Itemized ratification of the stack decision.** Allen has not yet recorded
-  itemized ratification of D2, D5, D8, D10 and D15 on
-  [issue #5](https://github.com/AllenBurgett/shadow-theater/issues/5). The
-  decisions are provisionally recorded under the quoted 2026-08-23 overnight
-  directive, which authorized completing Wave 1 (#5, #6, #4) but did not name
-  Milestone 1. **Milestone 1 implementation is blocked until that ratification
-  is recorded.** An amendment to any single decision does not invalidate the
-  others; an amendment to D5 or D6 supersedes and reopens #6's upgrade.
+  itemized ratification on
+  [issue #5](https://github.com/AllenBurgett/shadow-theater/issues/5); D2, D5,
+  D8, D10 and D15 are the flagged calls, and the ratification covers the whole
+  provisional record. The decisions are provisionally recorded under the
+  quoted 2026-08-23 overnight directive, which authorized completing Wave 1
+  (#5, #6, #4) but did not name Milestone 1. **Milestone 1 implementation is
+  blocked until that ratification is recorded.** An amendment to any single
+  decision does not invalidate the others; an amendment to D5 or D6
+  supersedes and reopens #6's upgrade.
 - **Prototype defect triage.** The deviations above are Milestone 1 inputs and
   need explicit resolve/test/discard decisions during the foundation spec, not
   incidental fixes.
