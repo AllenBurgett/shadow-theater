@@ -160,5 +160,6 @@ npm audit --json
   }
 ```
 
-Issue #4 owns clean-install and end-to-end verification of the README's
-disabled-LLM procedure after #3, #5, and #6 close.
+Issue #4 owned clean-install and end-to-end verification of the README's
+disabled-LLM procedure after #3, #5, and #6 closed; the recorded evidence is in
+[`milestone-0-closure.md`](milestone-0-closure.md).

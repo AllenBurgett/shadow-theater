@@ -127,7 +127,8 @@ Invoke-RestMethod `
 
 The version and new-game responses should report `ok: true`. The commit should
 return `ok: true`, an after-action report, and the next BLUE view. Milestone 0
-issue #4 owns the clean-install verification of this documented path.
+issue #4 verified this documented path from a clean install; the evidence is in
+[`docs/milestone-0-closure.md`](docs/milestone-0-closure.md).
 
 ## Local model configuration
 
@@ -168,11 +169,12 @@ debugging.
 - Several diagnostic build IDs and `diag_*` paths are temporary prototype
   scaffolding.
 
-The current dependency tree also has one high and three moderate affected
-packages. See the
+The dependency tree itself is clean: the one high and three moderate advisories
+inventoried before the issue #6 upgrade were fixed rather than waived, and
+`npm audit` now reports `found 0 vulnerabilities`. The
 [read-only security inventory](docs/prototype-baseline.md#read-only-security-inventory)
-for the recorded advisories and their #5/#6 disposition; no risk has been
-silently accepted.
+keeps the original findings as a snapshot record, and no risk has been silently
+accepted.
 
 The sanitized reference capture in issue #3 records selected behavior for
 comparison without turning these defects into future requirements.
