@@ -1,0 +1,2422 @@
+{
+  "fixtureId": "reference-001",
+  "seed": "VESPERA-01",
+  "gameBuildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+  "llmBuildId": "llm-redview-immutability-2026-03-01a",
+  "newGame": {
+    "seed": "VESPERA-01",
+    "gameBuildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+    "llmBuildId": "llm-redview-immutability-2026-03-01a"
+  },
+  "steps": [
+    {
+      "turn": 1,
+      "blueOrders": {
+        "operations": [
+          {
+            "card_id": "SPOOF_CONTACTS",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-11"
+              }
+            ],
+            "parameters": {
+              "theme": "armour-massing"
+            }
+          },
+          {
+            "card_id": "COUNTERINTEL_SWEEP",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-01"
+              }
+            ]
+          },
+          {
+            "card_id": "FORTIFY_REGION",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-03"
+              }
+            ]
+          },
+          {
+            "card_id": "RAPID_REDEPLOY",
+            "targets": [
+              {
+                "target_type": "LINK",
+                "target_id": "L-01-02"
+              }
+            ]
+          }
+        ]
+      },
+      "aar": [
+        "Turn 1 adjudication:",
+        "BLUE: Deception seeded rumor contact near R-11.",
+        "BLUE: Counterintel found no enemy rumors at R-01.",
+        "BLUE: Fortified R-03 (fort=1).",
+        "BLUE: Redeployed 15 presence from R-01 to R-02.",
+        "RED: Advanced into R-10 (fort=0, inSupply=false).",
+        "RED: Advanced into R-05 (fort=0, inSupply=false).",
+        "RED: Interdicted L-10-11 (capacity now 1)."
+      ],
+      "blueView": {
+        "seed": "VESPERA-01",
+        "turn": 2,
+        "resources": {
+          "cp": 10,
+          "isr": 8,
+          "political": 100
+        },
+        "hand": [
+          "SECURE_CORRIDOR",
+          "JAMMING_CORRIDOR",
+          "SPOOF_CONTACTS",
+          "INTERDICT_LINK",
+          "DELIBERATE_ADVANCE",
+          "FOCUSED_ISR_SWEEP"
+        ],
+        "legalTargetsByCard": {
+          "DELIBERATE_ADVANCE": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            }
+          ],
+          "RAPID_REDEPLOY": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FORTIFY_REGION": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ],
+          "INTERDICT_LINK": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SECURE_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FOCUSED_ISR_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "JAMMING_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SPOOF_CONTACTS": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "COUNTERINTEL_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ]
+        },
+        "objectives": {
+          "constraint": "Orbital comm noise: ISR effectiveness reduced by 1 in all COMMS regions for the next 3 turns.",
+          "public": {
+            "blue": [
+              {
+                "id": "OBJ-B-PUB-1",
+                "text": "Control R-04 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-B-PUB-2",
+                "text": "Keep at least 1 PORT controlled through Turn 8.",
+                "points": 6
+              }
+            ],
+            "red": [
+              {
+                "id": "OBJ-R-PUB-1",
+                "text": "Cut (capacity 0) any link adjacent to R-01 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-R-PUB-2",
+                "text": "Contest any HABITAT for 2 consecutive turns by Turn 8.",
+                "points": 6
+              }
+            ]
+          },
+          "secretBlue": [
+            {
+              "id": "OBJ-B-SEC-1",
+              "text": "Fortify a HABITAT to level 2.",
+              "points": 4
+            },
+            {
+              "id": "OBJ-B-SEC-2",
+              "text": "Reduce Red presence below 30 in any INDUSTRY region.",
+              "points": 4
+            }
+          ]
+        },
+        "regions": [
+          {
+            "id": "R-01",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 45,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-02",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 15,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-03",
+            "control": "BLUE",
+            "fort": 1,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 40,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-04",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-05",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 10
+            }
+          },
+          {
+            "id": "R-06",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-07",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-08",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-09",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-10",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 10
+            }
+          },
+          {
+            "id": "R-11",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 40
+            }
+          },
+          {
+            "id": "R-12",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 60
+            }
+          }
+        ],
+        "links": [
+          {
+            "id": "L-01-02",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-02-03",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-04",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-04-05",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-06",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-01-07",
+            "capacity": 3,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-07-08",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-08-09",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-09-10",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-10-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 1
+          },
+          {
+            "id": "L-11-12",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-09",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          }
+        ],
+        "rumors": [],
+        "completedObjectives": {
+          "blue": [
+            "OBJ-B-PUB-2",
+            "OBJ-B-SEC-2"
+          ],
+          "redPublic": [],
+          "redSecretCompletedCount": 0
+        },
+        "gameOver": {
+          "over": false,
+          "winner": null,
+          "reason": null,
+          "endedOnTurn": null,
+          "points": {
+            "blue": 10,
+            "red": 0
+          },
+          "totals": {
+            "blueTotal": 100,
+            "redTotal": 120
+          },
+          "completed": {
+            "blue": [
+              "OBJ-B-PUB-2",
+              "OBJ-B-SEC-2"
+            ],
+            "redPublic": [],
+            "redSecretCompletedCount": 0
+          }
+        },
+        "meta": {
+          "buildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+          "advanceExpectedFromLinks": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceLegalTargets": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceMismatch": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "blueOrders": {
+        "operations": [
+          {
+            "card_id": "INTERDICT_LINK",
+            "targets": [
+              {
+                "target_type": "LINK",
+                "target_id": "L-03-09"
+              }
+            ]
+          },
+          {
+            "card_id": "JAMMING_CORRIDOR",
+            "targets": [
+              {
+                "target_type": "LINK",
+                "target_id": "L-01-07"
+              }
+            ]
+          },
+          {
+            "card_id": "FOCUSED_ISR_SWEEP",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-09"
+              }
+            ]
+          },
+          {
+            "card_id": "SECURE_CORRIDOR",
+            "targets": [
+              {
+                "target_type": "LINK",
+                "target_id": "L-01-02"
+              }
+            ]
+          },
+          {
+            "card_id": "FOCUSED_ISR_SWEEP",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-05"
+              }
+            ]
+          }
+        ]
+      },
+      "aar": [
+        "Turn 2 adjudication:",
+        "BLUE: EW jammed link L-01-07 (2 turns).",
+        "BLUE: ISR sweep updated picture around R-09.",
+        "BLUE: Interdicted L-03-09 (capacity now 0).",
+        "RED: Advanced into R-09 (fort=0, inSupply=false).",
+        "RED: Advanced into R-04 (fort=0, inSupply=false).",
+        "RED: Advanced into R-06 (fort=0, inSupply=false)."
+      ],
+      "blueView": {
+        "seed": "VESPERA-01",
+        "turn": 3,
+        "resources": {
+          "cp": 10,
+          "isr": 8,
+          "political": 99
+        },
+        "hand": [
+          "COUNTERINTEL_SWEEP",
+          "RAPID_REDEPLOY",
+          "SPOOF_CONTACTS",
+          "JAMMING_CORRIDOR",
+          "FORTIFY_REGION",
+          "INTERDICT_LINK"
+        ],
+        "legalTargetsByCard": {
+          "DELIBERATE_ADVANCE": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            }
+          ],
+          "RAPID_REDEPLOY": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FORTIFY_REGION": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ],
+          "INTERDICT_LINK": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SECURE_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FOCUSED_ISR_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "JAMMING_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SPOOF_CONTACTS": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "COUNTERINTEL_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ]
+        },
+        "objectives": {
+          "constraint": "Orbital comm noise: ISR effectiveness reduced by 1 in all COMMS regions for the next 3 turns.",
+          "public": {
+            "blue": [
+              {
+                "id": "OBJ-B-PUB-1",
+                "text": "Control R-04 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-B-PUB-2",
+                "text": "Keep at least 1 PORT controlled through Turn 8.",
+                "points": 6
+              }
+            ],
+            "red": [
+              {
+                "id": "OBJ-R-PUB-1",
+                "text": "Cut (capacity 0) any link adjacent to R-01 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-R-PUB-2",
+                "text": "Contest any HABITAT for 2 consecutive turns by Turn 8.",
+                "points": 6
+              }
+            ]
+          },
+          "secretBlue": [
+            {
+              "id": "OBJ-B-SEC-1",
+              "text": "Fortify a HABITAT to level 2.",
+              "points": 4
+            },
+            {
+              "id": "OBJ-B-SEC-2",
+              "text": "Reduce Red presence below 30 in any INDUSTRY region.",
+              "points": 4
+            }
+          ]
+        },
+        "regions": [
+          {
+            "id": "R-01",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 45,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-02",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 15,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-03",
+            "control": "BLUE",
+            "fort": 1,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 40,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 0
+            }
+          },
+          {
+            "id": "R-04",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-05",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-06",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-07",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-08",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-09",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 10
+            }
+          },
+          {
+            "id": "R-10",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-11",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-12",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          }
+        ],
+        "links": [
+          {
+            "id": "L-01-02",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-02-03",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-04",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-04-05",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-06",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-01-07",
+            "capacity": 3,
+            "jammedTurns": 1,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-07-08",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-08-09",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-09-10",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-10-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-11-12",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-09",
+            "capacity": 0,
+            "jammedTurns": 0,
+            "interdictedTurns": 1
+          }
+        ],
+        "rumors": [],
+        "completedObjectives": {
+          "blue": [
+            "OBJ-B-PUB-2",
+            "OBJ-B-SEC-2"
+          ],
+          "redPublic": [],
+          "redSecretCompletedCount": 1
+        },
+        "gameOver": {
+          "over": false,
+          "winner": null,
+          "reason": null,
+          "endedOnTurn": null,
+          "points": {
+            "blue": 10,
+            "red": 4
+          },
+          "totals": {
+            "blueTotal": 100,
+            "redTotal": 150
+          },
+          "completed": {
+            "blue": [
+              "OBJ-B-PUB-2",
+              "OBJ-B-SEC-2"
+            ],
+            "redPublic": [],
+            "redSecretCompletedCount": 1
+          }
+        },
+        "meta": {
+          "buildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+          "advanceExpectedFromLinks": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceLegalTargets": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceMismatch": false
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "blueOrders": {
+        "operations": [
+          {
+            "card_id": "SPOOF_CONTACTS",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-12"
+              }
+            ],
+            "parameters": {
+              "theme": "supply-buildup"
+            }
+          },
+          {
+            "card_id": "COUNTERINTEL_SWEEP",
+            "targets": [
+              {
+                "target_type": "REGION",
+                "target_id": "R-03"
+              }
+            ]
+          },
+          {
+            "card_id": "RAPID_REDEPLOY",
+            "targets": [
+              {
+                "target_type": "LINK",
+                "target_id": "L-01-02"
+              }
+            ]
+          }
+        ]
+      },
+      "aar": [
+        "Turn 3 adjudication:",
+        "BLUE: Deception seeded rumor contact near R-12.",
+        "BLUE: Counterintel found no enemy rumors at R-03.",
+        "BLUE: Redeployed 11 presence from R-01 to R-02.",
+        "RED: Advanced into R-03 (fort=1, inSupply=false).",
+        "RED: Advanced into R-08 (fort=0, inSupply=false).",
+        "RED: Interdicted L-03-04 (capacity now 0)."
+      ],
+      "blueView": {
+        "seed": "VESPERA-01",
+        "turn": 4,
+        "resources": {
+          "cp": 10,
+          "isr": 8,
+          "political": 98
+        },
+        "hand": [
+          "DELIBERATE_ADVANCE",
+          "JAMMING_CORRIDOR",
+          "SPOOF_CONTACTS",
+          "RAPID_REDEPLOY",
+          "INTERDICT_LINK",
+          "COUNTERINTEL_SWEEP"
+        ],
+        "legalTargetsByCard": {
+          "DELIBERATE_ADVANCE": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            }
+          ],
+          "RAPID_REDEPLOY": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FORTIFY_REGION": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ],
+          "INTERDICT_LINK": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SECURE_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FOCUSED_ISR_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "JAMMING_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SPOOF_CONTACTS": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "COUNTERINTEL_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            }
+          ]
+        },
+        "objectives": {
+          "constraint": "Orbital comm noise: ISR effectiveness reduced by 1 in all COMMS regions for the next 3 turns.",
+          "public": {
+            "blue": [
+              {
+                "id": "OBJ-B-PUB-1",
+                "text": "Control R-04 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-B-PUB-2",
+                "text": "Keep at least 1 PORT controlled through Turn 8.",
+                "points": 6
+              }
+            ],
+            "red": [
+              {
+                "id": "OBJ-R-PUB-1",
+                "text": "Cut (capacity 0) any link adjacent to R-01 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-R-PUB-2",
+                "text": "Contest any HABITAT for 2 consecutive turns by Turn 8.",
+                "points": 6
+              }
+            ]
+          },
+          "secretBlue": [
+            {
+              "id": "OBJ-B-SEC-1",
+              "text": "Fortify a HABITAT to level 2.",
+              "points": 4
+            },
+            {
+              "id": "OBJ-B-SEC-2",
+              "text": "Reduce Red presence below 30 in any INDUSTRY region.",
+              "points": 4
+            }
+          ]
+        },
+        "regions": [
+          {
+            "id": "R-01",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 34,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-02",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 26,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-03",
+            "control": "BLUE",
+            "fort": 1,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 34,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-04",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-05",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-06",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-07",
+            "control": "NEUTRAL",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-08",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-09",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "LIKELY",
+              "estimate": 10
+            }
+          },
+          {
+            "id": "R-10",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-11",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-12",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          }
+        ],
+        "links": [
+          {
+            "id": "L-01-02",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-02-03",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-04",
+            "capacity": 0,
+            "jammedTurns": 0,
+            "interdictedTurns": 1
+          },
+          {
+            "id": "L-04-05",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-06",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-01-07",
+            "capacity": 3,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-07-08",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-08-09",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-09-10",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-10-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-11-12",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-09",
+            "capacity": 0,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          }
+        ],
+        "rumors": [],
+        "completedObjectives": {
+          "blue": [
+            "OBJ-B-PUB-2",
+            "OBJ-B-SEC-2"
+          ],
+          "redPublic": [],
+          "redSecretCompletedCount": 0
+        },
+        "gameOver": {
+          "over": false,
+          "winner": null,
+          "reason": null,
+          "endedOnTurn": null,
+          "points": {
+            "blue": 10,
+            "red": 0
+          },
+          "totals": {
+            "blueTotal": 94,
+            "redTotal": 170
+          },
+          "completed": {
+            "blue": [
+              "OBJ-B-PUB-2",
+              "OBJ-B-SEC-2"
+            ],
+            "redPublic": [],
+            "redSecretCompletedCount": 0
+          }
+        },
+        "meta": {
+          "buildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+          "advanceExpectedFromLinks": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceLegalTargets": [
+            "R-04",
+            "R-07",
+            "R-09"
+          ],
+          "advanceMismatch": false
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "blueOrders": {
+        "operations": []
+      },
+      "aar": [
+        "Turn 4 adjudication:",
+        "RED: Advanced into R-07 (fort=0, inSupply=false).",
+        "RED: Advanced into R-03 (fort=1, inSupply=false).",
+        "RED: Interdicted L-02-03 (capacity now 1)."
+      ],
+      "blueView": {
+        "seed": "VESPERA-01",
+        "turn": 5,
+        "resources": {
+          "cp": 10,
+          "isr": 8,
+          "political": 97
+        },
+        "hand": [
+          "SECURE_CORRIDOR",
+          "FORTIFY_REGION",
+          "INTERDICT_LINK",
+          "COUNTERINTEL_SWEEP",
+          "FOCUSED_ISR_SWEEP",
+          "RAPID_REDEPLOY"
+        ],
+        "legalTargetsByCard": {
+          "DELIBERATE_ADVANCE": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            }
+          ],
+          "RAPID_REDEPLOY": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FORTIFY_REGION": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            }
+          ],
+          "INTERDICT_LINK": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SECURE_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "FOCUSED_ISR_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "JAMMING_CORRIDOR": [
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-02"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-02-03"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-04"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-01-07"
+            },
+            {
+              "target_type": "LINK",
+              "target_id": "L-03-09"
+            }
+          ],
+          "SPOOF_CONTACTS": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-03"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-04"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-05"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-06"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-07"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-08"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-09"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-10"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-11"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-12"
+            }
+          ],
+          "COUNTERINTEL_SWEEP": [
+            {
+              "target_type": "REGION",
+              "target_id": "R-01"
+            },
+            {
+              "target_type": "REGION",
+              "target_id": "R-02"
+            }
+          ]
+        },
+        "objectives": {
+          "constraint": "Orbital comm noise: ISR effectiveness reduced by 1 in all COMMS regions for the next 3 turns.",
+          "public": {
+            "blue": [
+              {
+                "id": "OBJ-B-PUB-1",
+                "text": "Control R-04 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-B-PUB-2",
+                "text": "Keep at least 1 PORT controlled through Turn 8.",
+                "points": 6
+              }
+            ],
+            "red": [
+              {
+                "id": "OBJ-R-PUB-1",
+                "text": "Cut (capacity 0) any link adjacent to R-01 by Turn 6.",
+                "points": 6
+              },
+              {
+                "id": "OBJ-R-PUB-2",
+                "text": "Contest any HABITAT for 2 consecutive turns by Turn 8.",
+                "points": 6
+              }
+            ]
+          },
+          "secretBlue": [
+            {
+              "id": "OBJ-B-SEC-1",
+              "text": "Fortify a HABITAT to level 2.",
+              "points": 4
+            },
+            {
+              "id": "OBJ-B-SEC-2",
+              "text": "Reduce Red presence below 30 in any INDUSTRY region.",
+              "points": 4
+            }
+          ]
+        },
+        "regions": [
+          {
+            "id": "R-01",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 34,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-02",
+            "control": "BLUE",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 26,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-03",
+            "control": "CONTESTED",
+            "fort": 1,
+            "unrest": 0,
+            "supply": "IN_SUPPLY",
+            "friendlyPresence": 28,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-04",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-05",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-06",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-07",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-08",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-09",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-10",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-11",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          },
+          {
+            "id": "R-12",
+            "control": "RED",
+            "fort": 0,
+            "unrest": 0,
+            "supply": "CUT",
+            "friendlyPresence": 0,
+            "enemy": {
+              "confidence": "UNKNOWN",
+              "estimate": null
+            }
+          }
+        ],
+        "links": [
+          {
+            "id": "L-01-02",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-02-03",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 1
+          },
+          {
+            "id": "L-03-04",
+            "capacity": 0,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-04-05",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-06",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-01-07",
+            "capacity": 3,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-07-08",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-08-09",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-09-10",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-10-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-11-12",
+            "capacity": 2,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-05-11",
+            "capacity": 1,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          },
+          {
+            "id": "L-03-09",
+            "capacity": 0,
+            "jammedTurns": 0,
+            "interdictedTurns": 0
+          }
+        ],
+        "rumors": [],
+        "completedObjectives": {
+          "blue": [
+            "OBJ-B-PUB-2",
+            "OBJ-B-SEC-2"
+          ],
+          "redPublic": [
+            "OBJ-R-PUB-2"
+          ],
+          "redSecretCompletedCount": 0
+        },
+        "gameOver": {
+          "over": false,
+          "winner": null,
+          "reason": null,
+          "endedOnTurn": null,
+          "points": {
+            "blue": 10,
+            "red": 6
+          },
+          "totals": {
+            "blueTotal": 88,
+            "redTotal": 190
+          },
+          "completed": {
+            "blue": [
+              "OBJ-B-PUB-2",
+              "OBJ-B-SEC-2"
+            ],
+            "redPublic": [
+              "OBJ-R-PUB-2"
+            ],
+            "redSecretCompletedCount": 0
+          }
+        },
+        "meta": {
+          "buildId": "adv-legal-hardfix-2026-03-01c+endgame-2026-03-01a",
+          "advanceExpectedFromLinks": [
+            "R-03",
+            "R-07"
+          ],
+          "advanceLegalTargets": [
+            "R-03",
+            "R-07"
+          ],
+          "advanceMismatch": false
+        }
+      }
+    }
+  ]
+}

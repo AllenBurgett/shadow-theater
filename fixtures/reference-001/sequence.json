@@ -1,0 +1,48 @@
+{
+  "id": "reference-001",
+  "seed": "VESPERA-01",
+  "description": "Four-turn BLUE order sequence against the fixed prototype map with the RED LLM profile disabled, so RED orders come from the deterministic staff planner. The sequence deliberately avoids completing a third BLUE objective, because the prototype's scoring would otherwise end the game during turn 1.",
+  "requests": [
+    {
+      "turn": 1,
+      "intent": "Spend the full 10 CP on one op from each effect family: deception, counter-deception, fortification, and presence movement. R-04 is deliberately not attacked; taking it completes BLUE's public objective set and ends the game immediately.",
+      "blueOrders": {
+        "operations": [
+          { "card_id": "SPOOF_CONTACTS", "targets": [{ "target_type": "REGION", "target_id": "R-11" }], "parameters": { "theme": "armour-massing" } },
+          { "card_id": "COUNTERINTEL_SWEEP", "targets": [{ "target_type": "REGION", "target_id": "R-01" }] },
+          { "card_id": "FORTIFY_REGION", "targets": [{ "target_type": "REGION", "target_id": "R-03" }] },
+          { "card_id": "RAPID_REDEPLOY", "targets": [{ "target_type": "LINK", "target_id": "L-01-02" }] }
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "intent": "Exercise link interdiction and jamming, then deliberately overrun the CP budget. SECURE_CORRIDOR takes the running total to 11 of 10 CP and is rejected; the trailing 2 CP sweep would have fit in the remaining budget but is dropped too, which records the prototype's first-over-budget-stops-everything behavior.",
+      "blueOrders": {
+        "operations": [
+          { "card_id": "INTERDICT_LINK", "targets": [{ "target_type": "LINK", "target_id": "L-03-09" }] },
+          { "card_id": "JAMMING_CORRIDOR", "targets": [{ "target_type": "LINK", "target_id": "L-01-07" }] },
+          { "card_id": "FOCUSED_ISR_SWEEP", "targets": [{ "target_type": "REGION", "target_id": "R-09" }] },
+          { "card_id": "SECURE_CORRIDOR", "targets": [{ "target_type": "LINK", "target_id": "L-01-02" }] },
+          { "card_id": "FOCUSED_ISR_SWEEP", "targets": [{ "target_type": "REGION", "target_id": "R-05" }] }
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "intent": "Seed a second rumor, sweep BLUE's own back line for RED deception, and shift presence again while the turn-2 interdiction and jamming timers decay.",
+      "blueOrders": {
+        "operations": [
+          { "card_id": "SPOOF_CONTACTS", "targets": [{ "target_type": "REGION", "target_id": "R-12" }], "parameters": { "theme": "supply-buildup" } },
+          { "card_id": "COUNTERINTEL_SWEEP", "targets": [{ "target_type": "REGION", "target_id": "R-03" }] },
+          { "card_id": "RAPID_REDEPLOY", "targets": [{ "target_type": "LINK", "target_id": "L-01-02" }] }
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "intent": "Commit no BLUE operations so one adjudication is driven entirely by the RED staff planner and the decay/timer path.",
+      "blueOrders": { "operations": [] }
+    }
+  ]
+}
