@@ -27,3 +27,7 @@ config.local.json
 /.github/instructions/
 /.github/prompts/
 /.github/skills/
+
+# Build and coverage artifacts (never committed)
+packages/web/dist/
+coverage/

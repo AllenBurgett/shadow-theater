@@ -1,0 +1,89 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "root": true,
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/coverage",
+      "!.tmp",
+      "!.claude",
+      "!logs",
+      "!package-lock.json",
+      "!server.js",
+      "!game.js",
+      "!llm.js",
+      "!config.js",
+      "!logger.js",
+      "!data.map.js",
+      "!config.json",
+      "!public",
+      "!fixtures",
+      "!tools/capture-reference.mjs",
+      "!docs"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": false,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100,
+    "attributePosition": "auto",
+    "bracketSpacing": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    },
+    "domains": {
+      "test": "recommended",
+      "types": "recommended"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "preset": "recommended",
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always",
+      "bracketSameLine": false
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["packages/web/**"],
+      "linter": {
+        "domains": {
+          "react": "recommended"
+        }
+      }
+    }
+  ]
+}
