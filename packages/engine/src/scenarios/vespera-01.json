@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "id": "vespera-01",
+  "name": "Vespera",
+  "turnLimit": 16,
+  "winPoints": 12,
+  "resources": {
+    "cpPerTurn": 10,
+    "isrPerTurn": 6,
+    "politicalStart": 20
+  },
+  "handSize": 6,
+  "map": {
+    "regions": [
+      { "id": "R-01", "name": "Kestrel Port", "type": "PORT", "x": 120, "y": 140 },
+      { "id": "R-02", "name": "Vesper Ridge", "type": "WILDS", "x": 260, "y": 80 },
+      { "id": "R-03", "name": "Helio Habitat", "type": "HABITAT", "x": 400, "y": 140 },
+      { "id": "R-04", "name": "Arc Relay", "type": "COMMS", "x": 520, "y": 90 },
+      { "id": "R-05", "name": "Grove Basin", "type": "WILDS", "x": 640, "y": 150 },
+      { "id": "R-06", "name": "Icarus Power", "type": "POWER", "x": 740, "y": 90 },
+      { "id": "R-07", "name": "Dustline Junction", "type": "INDUSTRY", "x": 180, "y": 280 },
+      { "id": "R-08", "name": "Sable Flats", "type": "WILDS", "x": 320, "y": 250 },
+      { "id": "R-09", "name": "Orchid Habitat", "type": "HABITAT", "x": 460, "y": 270 },
+      { "id": "R-10", "name": "South Relay", "type": "COMMS", "x": 560, "y": 320 },
+      { "id": "R-11", "name": "Kappa Foundry", "type": "INDUSTRY", "x": 680, "y": 280 },
+      { "id": "R-12", "name": "Redwater Port", "type": "PORT", "x": 780, "y": 320 }
+    ],
+    "links": [
+      { "id": "L-01-02", "a": "R-01", "b": "R-02", "capacity": 2 },
+      { "id": "L-02-03", "a": "R-02", "b": "R-03", "capacity": 2 },
+      { "id": "L-03-04", "a": "R-03", "b": "R-04", "capacity": 1 },
+      { "id": "L-04-05", "a": "R-04", "b": "R-05", "capacity": 2 },
+      { "id": "L-05-06", "a": "R-05", "b": "R-06", "capacity": 2 },
+      { "id": "L-01-07", "a": "R-01", "b": "R-07", "capacity": 3 },
+      { "id": "L-07-08", "a": "R-07", "b": "R-08", "capacity": 2 },
+      { "id": "L-08-09", "a": "R-08", "b": "R-09", "capacity": 2 },
+      { "id": "L-09-10", "a": "R-09", "b": "R-10", "capacity": 1 },
+      { "id": "L-10-11", "a": "R-10", "b": "R-11", "capacity": 2 },
+      { "id": "L-11-12", "a": "R-11", "b": "R-12", "capacity": 2 },
+      { "id": "L-05-11", "a": "R-05", "b": "R-11", "capacity": 1 },
+      { "id": "L-03-09", "a": "R-03", "b": "R-09", "capacity": 1 }
+    ]
+  },
+  "cards": [
+    {
+      "id": "DELIBERATE_ADVANCE",
+      "name": "Deliberate Advance",
+      "cp": 3,
+      "isr": 0,
+      "target": "REGION",
+      "domain": "SURFACE",
+      "text": "Advance into a region you do not control that is joined by an effective-capacity link to a region you hold. Adds 18 presence from an in-supply neighbour, otherwise 10; the defender loses that much less fort x 4, never gaining presence."
+    },
+    {
+      "id": "RAPID_REDEPLOY",
+      "name": "Rapid Redeploy",
+      "cp": 3,
+      "isr": 0,
+      "target": "LINK",
+      "domain": "SURFACE",
+      "text": "Move 25% of the stronger endpoint's presence (min 5, max 20) across a link you can reach, strong endpoint to weak. Requires effective capacity of at least 1."
+    },
+    {
+      "id": "FORTIFY_REGION",
+      "name": "Fortify Region",
+      "cp": 2,
+      "isr": 0,
+      "target": "REGION",
+      "domain": "SURFACE",
+      "text": "Raise fort by 1 (max 3) in a region you control. Blocked at unrest 2 or higher, and at most once per region per turn."
+    },
+    {
+      "id": "INTERDICT_LINK",
+      "name": "Interdict Link",
+      "cp": 3,
+      "isr": 0,
+      "target": "LINK",
+      "domain": "SURFACE",
+      "text": "Place an interdiction on a link you can reach for 2 turns. Each active interdiction lowers effective capacity by 1; they stack and restore on expiry."
+    },
+    {
+      "id": "SECURE_CORRIDOR",
+      "name": "Secure Corridor",
+      "cp": 3,
+      "isr": 0,
+      "target": "LINK",
+      "domain": "SURFACE",
+      "text": "Clear every enemy effect from a link you can reach. Never raises capacity above the map's base value."
+    },
+    {
+      "id": "FOCUSED_ISR_SWEEP",
+      "name": "Focused ISR Sweep",
+      "cp": 2,
+      "isr": 4,
+      "target": "REGION",
+      "domain": "INFO",
+      "text": "Sweep any region: your intel age there resets to 0, reading CONFIRMED in the next view."
+    },
+    {
+      "id": "JAMMING_CORRIDOR",
+      "name": "Jamming Corridor",
+      "cp": 3,
+      "isr": 2,
+      "target": "LINK",
+      "domain": "INFO",
+      "text": "Jam a link you can reach for 2 turns. The jam is yours, and masks the link's capacity from a viewer with stale intel at both endpoints."
+    },
+    {
+      "id": "SPOOF_CONTACTS",
+      "name": "Spoof Contacts",
+      "cp": 3,
+      "isr": 2,
+      "target": "REGION",
+      "domain": "INFO",
+      "text": "Plant a contact the enemy sees in any region for 2 turns. Pick its theme: supply-buildup, armour-massing, or recon-activity."
+    },
+    {
+      "id": "COUNTERINTEL_SWEEP",
+      "name": "Counterintel Sweep",
+      "cp": 2,
+      "isr": 2,
+      "target": "REGION",
+      "domain": "INFO",
+      "text": "Remove every enemy contact from a region you control."
+    }
+  ],
+  "setup": {
+    "sides": {
+      "BLUE": {
+        "control": ["R-01", "R-03"],
+        "presence": { "R-01": 60, "R-03": 40 }
+      },
+      "RED": {
+        "control": ["R-12", "R-11", "R-09"],
+        "presence": { "R-12": 60, "R-11": 40, "R-09": 40 }
+      }
+    }
+  },
+  "objectives": {
+    "BLUE": [
+      {
+        "id": "blue-control-south-relay",
+        "visibility": "public",
+        "points": 6,
+        "condition": { "type": "controlRegion", "regionId": "R-10", "byTurn": 6 }
+      },
+      {
+        "id": "blue-hold-port",
+        "visibility": "public",
+        "points": 6,
+        "condition": {
+          "type": "holdRegionType",
+          "regionType": "PORT",
+          "count": 1,
+          "throughTurn": 8
+        }
+      },
+      {
+        "id": "blue-fortify-habitat",
+        "visibility": "secret",
+        "points": 4,
+        "condition": { "type": "fortifyRegionType", "regionType": "HABITAT", "level": 3 }
+      },
+      {
+        "id": "blue-reduce-industry-presence",
+        "visibility": "secret",
+        "points": 4,
+        "condition": {
+          "type": "reduceEnemyPresence",
+          "regionType": "INDUSTRY",
+          "below": 30,
+          "armAt": 30
+        }
+      }
+    ],
+    "RED": [
+      {
+        "id": "red-suppress-kestrel-port",
+        "visibility": "public",
+        "points": 6,
+        "condition": {
+          "type": "suppressLinkAdjacent",
+          "regionId": "R-01",
+          "byTurn": 6,
+          "consecutiveTurns": 2
+        }
+      },
+      {
+        "id": "red-contest-habitat",
+        "visibility": "public",
+        "points": 6,
+        "condition": {
+          "type": "contestRegionType",
+          "regionType": "HABITAT",
+          "consecutiveTurns": 3,
+          "byTurn": 8
+        }
+      },
+      {
+        "id": "red-sustain-jam",
+        "visibility": "secret",
+        "points": 4,
+        "condition": { "type": "sustainOwnJam", "turns": 3 }
+      },
+      {
+        "id": "red-rumors-in-blue-regions",
+        "visibility": "secret",
+        "points": 4,
+        "condition": {
+          "type": "activeRumorsInEnemyControlled",
+          "count": 2,
+          "consecutiveTurns": 3
+        }
+      }
+    ]
+  },
+  "constraints": [{ "type": "habitatLossPoliticalPenalty", "amount": 5 }]
+}
