@@ -19,7 +19,14 @@ function killChild(child) {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
     return;
   }
-  child.kill("SIGTERM");
+  // On POSIX each child leads its own process group (see `detached` below), so
+  // signal the negated pid to reach the shell *and* the npm/dev-server tree.
+  try {
+    process.kill(-child.pid, "SIGTERM");
+  } catch {
+    // ESRCH: the group is already gone. Anything else: fall back to the child.
+    child.kill("SIGTERM");
+  }
 }
 
 function shutdown(code) {
@@ -33,7 +40,17 @@ function shutdown(code) {
 
 for (const target of targets) {
   // A single command string avoids DEP0190 (args + shell: true).
-  const child = spawn(target.command, { shell: true, stdio: "inherit" });
+  // `detached` on POSIX makes the child a process-group leader so shutdown can
+  // signal the whole tree; on Windows the group is irrelevant (taskkill /T
+  // handles the tree) and `detached` would open a console window. We never
+  // `unref()` — the launcher waits on both children. The cost of `detached` is
+  // that a terminal Ctrl-C no longer reaches the group, which is precisely what
+  // the SIGINT/SIGTERM handlers below forward.
+  const child = spawn(target.command, {
+    shell: true,
+    stdio: "inherit",
+    detached: !isWindows,
+  });
   child.on("exit", (code, signal) => {
     if (!shuttingDown) {
       console.error(`[dev] ${target.label} exited (code=${code} signal=${signal}); stopping both.`);
