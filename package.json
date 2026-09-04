@@ -3,14 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node tools/dev.mjs",
+    "build": "npm run build -w packages/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome ci .",
+    "test": "vitest run",
+    "smoke": "npm run smoke -w packages/server --if-present"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24.12"
   },
   "dependencies": {
     "express": "^5.2.1",
     "zod": "^4.4.3"
+  },
+  "overrides": {
+    "vitest": "^4.1.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
+    "@vitest/coverage-v8": "^4.1.11",
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.11"
   }
 }
