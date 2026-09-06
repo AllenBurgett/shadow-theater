@@ -59,6 +59,12 @@ describe("@shadow/engine entry point", () => {
     });
   });
 
+  it("canonicalises JSON by sorted keys, dropping undefined values", () => {
+    expect(canonicalJson({ b: 1, a: { d: undefined, c: [2, { f: 3, e: 4 }] } })).toBe(
+      '{"a":{"c":[2,{"e":4,"f":3}]},"b":1}',
+    );
+  });
+
   it("composes the loader, the RNG, and the event log", () => {
     const scenario = loadScenario(scenarioJson);
     const hand = createRng(scenario.id)

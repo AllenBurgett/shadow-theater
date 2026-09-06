@@ -63,6 +63,14 @@ describe("createRng golden vectors", () => {
       expect(value).toBeLessThan(1);
     }
   });
+
+  it("consumes exactly one nextU32 draw per next() call", () => {
+    const a = createRng("vespera-01");
+    const b = createRng("vespera-01");
+    a.next();
+    b.nextU32();
+    expect(drawU32(a, 10)).toEqual(drawU32(b, 10));
+  });
 });
 
 describe("createRng determinism", () => {
@@ -224,5 +232,10 @@ describe("Rng.sample", () => {
 
   it("rejects a count larger than the pool", () => {
     expect(() => createRng("vespera-01").sample(cards, cards.length + 1)).toThrow(/count/);
+  });
+
+  it("rejects a negative or fractional count", () => {
+    expect(() => createRng("vespera-01").sample(cards, -1)).toThrow(/count/);
+    expect(() => createRng("vespera-01").sample(cards, 1.5)).toThrow(/count/);
   });
 });

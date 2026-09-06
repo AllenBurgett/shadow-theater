@@ -15,9 +15,20 @@ export default defineConfig({
         "packages/*/src/**/*.d.ts",
         "packages/web/src/main.tsx",
       ],
-      // Thresholds stay at 0 while the packages are scaffolds; the rules
-      // core (issues #13/#14) raises them alongside its own suite.
+      // Per-glob thresholds: the engine rules core carries a real gate from
+      // issue #13's suite onward (it currently measures 100% on all four
+      // metrics; the margin is headroom, and issue #14 tightens it as
+      // resolveTurn and the projection land). The global numbers stay at 0
+      // because `packages/server` and `packages/web` are still scaffolds —
+      // a single global figure would be dominated by the engine and would
+      // wave their 0% through; issues #18/#19 add their own glob entries.
       thresholds: {
+        "packages/engine/src/**": {
+          statements: 98,
+          branches: 95,
+          functions: 100,
+          lines: 98,
+        },
         lines: 0,
         functions: 0,
         branches: 0,
