@@ -54,10 +54,12 @@ export {
  * control recompute, unrest, political upkeep with the RD-8 constraint,
  * objectives, the endings ladder, the `lastController` snapshot, and the turn
  * increment (skipped once the game has ended). The ending is stored in
- * `GameState.gameOver` and must never be recomputed by a caller (FR-012).
+ * `GameState.gameOver` and must never be recomputed by a caller (FR-012);
+ * resolving a game that already carries one throws `GameAlreadyEndedError`.
  */
 export type { TurnOrders, TurnResult } from "./rules/resolve.ts";
 export {
+  GameAlreadyEndedError,
   initiativeFor,
   OrderSideMismatchError,
   OrderValidationError,

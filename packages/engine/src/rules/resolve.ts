@@ -1,6 +1,7 @@
 import type {
   Card,
   Event,
+  GameOverRecord,
   GameState,
   Operation,
   OrderRejection,
@@ -138,6 +139,31 @@ export class OrderSideMismatchError extends Error {
   }
 }
 
+/**
+ * Thrown when `resolveTurn` is handed a game that has already ended.
+ *
+ * Nothing legitimately resolves past an ending: `replay` stops at the stored
+ * record and the server checks `gameOver` before accepting orders. Running the
+ * phases anyway would move the board past the turn the record says the game
+ * ended on and append post-game events to a stream that is supposed to
+ * reproduce the match on its own (FR-019).
+ *
+ * It throws rather than returning a silent no-op because a no-op would hide
+ * the mistake from exactly the code most likely to be making it — a server
+ * loop or replay driver that forgot to check. Like an invalid order set or a
+ * misrouted one, this is a caller error, not a game outcome.
+ */
+export class GameAlreadyEndedError extends Error {
+  /** The stored ending the game already carries. */
+  readonly record: GameOverRecord;
+
+  constructor(record: GameOverRecord) {
+    super(`Game already ended on turn ${record.endedOnTurn} (${record.reason})`);
+    this.name = "GameAlreadyEndedError";
+    this.record = record;
+  }
+}
+
 /** RD-1: BLUE on odd turns, RED on even — derived from the turn, never stored. */
 export function initiativeFor(turn: number): Side {
   return turn % 2 === 1 ? "BLUE" : "RED";
@@ -182,7 +208,14 @@ export function resolveTurn(
   const initiative = initiativeFor(turn);
   const order: readonly Side[] = initiative === "BLUE" ? ["BLUE", "RED"] : ["RED", "BLUE"];
 
-  // Routing first: everything below reads the hand and budgets through
+  // Lifecycle first, before the orders are even inspected: a finished game
+  // has no next turn, and this has to reject before any phase runs or any
+  // event is emitted — hence ahead of validation and of the log's creation.
+  if (state.gameOver !== null) {
+    throw new GameAlreadyEndedError(state.gameOver);
+  }
+
+  // Then routing: everything below reads the hand and budgets through
   // `orders.side` but applies effects as the key, so the two must agree.
   for (const side of order) {
     if (orders[side].side !== side) {
@@ -546,16 +579,13 @@ function applyObjectives(context: TurnContext, state: GameState): GameState {
 /**
  * Phase 10 (FR-012, RD-11): computes the ending once and stores it.
  *
- * A state that already carries a `gameOver` is left exactly as it is — the
- * record is written once and never recomputed, which is the whole point of
- * storing it (the prototype recomputed it per view and drifted). Resolving
- * another turn on a finished game is a caller error, not a game outcome, so it
- * neither re-decides the ending nor emits a second `gameEnded`.
+ * The record is written once and never recomputed, which is the whole point of
+ * storing it (the prototype recomputed it per view and drifted). Nothing
+ * re-checks `state.gameOver` here: `resolveTurn` rejects a finished game at
+ * entry, so this phase only ever sees a live one, and a second guard would be
+ * unreachable code claiming to defend an invariant it cannot observe.
  */
 function applyEnding(context: TurnContext, state: GameState): GameState {
-  if (state.gameOver !== null) {
-    return state;
-  }
   const record = evaluateEnding(context.scenario, state);
   if (record === null) {
     return state;

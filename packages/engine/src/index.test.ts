@@ -17,6 +17,7 @@ import {
   evaluateUnrest,
   expireLinkEffects,
   fnv1a32,
+  GameAlreadyEndedError,
   initiativeFor,
   type LlmConfig,
   type LoggingConfig,
@@ -62,6 +63,7 @@ describe("@shadow/engine entry point", () => {
     expect(typeof resolveTurn).toBe("function");
     expect(initiativeFor(1)).toBe("BLUE");
     expect(OrderValidationError.prototype).toBeInstanceOf(Error);
+    expect(GameAlreadyEndedError.prototype).toBeInstanceOf(Error);
     expect(CONTROL_MARGIN).toBe(10);
   });
 

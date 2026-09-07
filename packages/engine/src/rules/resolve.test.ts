@@ -13,9 +13,11 @@ import type {
 import { EventSchema } from "../contract/index.ts";
 import { deepFreeze } from "../freeze.ts";
 import { loadScenario } from "../scenario.ts";
+import { evaluateEnding } from "./endings.ts";
 import { drawHands } from "./hands.ts";
 import type { TurnOrders } from "./resolve.ts";
 import {
+  GameAlreadyEndedError,
   initiativeFor,
   OrderSideMismatchError,
   OrderValidationError,
@@ -742,6 +744,15 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
     RED: orderSet("RED", 1, []),
   };
 
+  /** A turn-1 board RED cannot survive: it ends on WIPEOUT the moment it resolves. */
+  function wipedOut(): GameState {
+    return fixture(1, (draft) => {
+      for (const state of Object.values(draft.regions)) {
+        state.presence.RED = 0;
+      }
+    });
+  }
+
   /**
    * Plays no-op turns from `start` until the game ends or `limit` turns have
    * passed, returning every resolved state. This is the whole turn loop under
@@ -790,11 +801,7 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
   });
 
   it("stores the ending once, announces it to both sides, and stops the clock", () => {
-    const doomed = fixture(1, (draft) => {
-      for (const state of Object.values(draft.regions)) {
-        state.presence.RED = 0;
-      }
-    });
+    const doomed = wipedOut();
 
     const { state, events } = resolveTurn(SCENARIO, doomed, QUIET_TURN_1);
 
@@ -807,6 +814,8 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
     expect(kinds(events, "gameEnded")).toEqual([
       expect.objectContaining({ visibleTo: { BLUE: true, RED: true } }),
     ]);
+    // Exactly one, so the stream carries the ending once (FR-012/FR-019).
+    expect(kinds(events, "gameEnded")).toHaveLength(1);
     // RD-1 phase 11: no increment, and no hand drawn for a turn nobody plays.
     expect(state.turn).toBe(1);
     expect(state.sides.BLUE.hand).toEqual(doomed.sides.BLUE.hand);
@@ -818,13 +827,7 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
     // `record.points` — which emission then freezes, leaving one field of a
     // live `GameState` frozen and every region beside it writable. The
     // assertion has to reach into `points` to catch that.
-    const doomed = fixture(1, (draft) => {
-      for (const state of Object.values(draft.regions)) {
-        state.presence.RED = 0;
-      }
-    });
-
-    const { state, events } = resolveTurn(SCENARIO, doomed, QUIET_TURN_1);
+    const { state, events } = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1);
 
     expect(Object.isFrozen(state.gameOver)).toBe(false);
     expect(Object.isFrozen(state.gameOver?.points)).toBe(false);
@@ -836,24 +839,64 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
     );
   });
 
-  it("never recomputes a stored ending, however often it is resolved again", () => {
-    const doomed = fixture(1, (draft) => {
-      for (const state of Object.values(draft.regions)) {
-        state.presence.RED = 0;
-      }
-    });
-    const finished = resolveTurn(SCENARIO, doomed, QUIET_TURN_1).state;
+  it("stores the record it computed rather than one anybody can re-derive", () => {
+    // FR-012: the ending is computed once and stored. Re-evaluating the same
+    // finished state yields an equal but *distinct* record, so identity is
+    // what proves the stored one was never quietly replaced — and identity is
+    // checkable without resolving again, which the guard below now forbids.
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+    const recomputed = evaluateEnding(SCENARIO, finished);
 
-    const again = resolveTurn(SCENARIO, finished, {
+    expect(recomputed).toEqual(finished.gameOver);
+    expect(recomputed).not.toBe(finished.gameOver);
+  });
+
+  it("refuses to resolve a game that has already ended", () => {
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+    const before = JSON.stringify(finished);
+    const orders: TurnOrders = {
       BLUE: orderSet("BLUE", finished.turn, []),
       RED: orderSet("RED", finished.turn, []),
-    });
+    };
 
-    // Identity, not equality: the record is the same object, so nothing has
-    // re-derived it against a board that has moved on (FR-012).
-    expect(again.state.gameOver).toBe(finished.gameOver);
-    expect(kinds(again.events, "gameEnded")).toEqual([]);
-    expect(again.state.turn).toBe(finished.turn);
+    // The error names the ending, so a server loop or replay driver that
+    // reached here learns which record it should have been reading.
+    expect(() => resolveTurn(SCENARIO, finished, orders)).toThrow(GameAlreadyEndedError);
+    try {
+      resolveTurn(SCENARIO, finished, orders);
+      expect.unreachable("resolveTurn must reject a finished game");
+    } catch (error) {
+      expect(error).toBeInstanceOf(GameAlreadyEndedError);
+      const ended = error as GameAlreadyEndedError;
+      expect(ended.record.reason).toBe("WIPEOUT");
+      expect(ended.record.endedOnTurn).toBe(1);
+      expect(ended.record).toBe(finished.gameOver);
+      expect(ended.message).toContain("turn 1");
+    }
+    // Nothing ran: no phase moved the board and no post-game event exists to
+    // append to a stream that must reproduce the match on its own (FR-019).
+    expect(JSON.stringify(finished)).toBe(before);
+  });
+
+  it("rejects a finished game before it so much as validates the orders", () => {
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+
+    // Orders that would fail validation on a live game: the lifecycle guard
+    // has to answer first, or the caller is told the wrong thing about why.
+    expect(() =>
+      resolveTurn(SCENARIO, finished, {
+        BLUE: orderSet("BLUE", finished.turn + 99, [ops("DELIBERATE_ADVANCE", "R-06")]),
+        RED: orderSet("RED", finished.turn, []),
+      }),
+    ).toThrow(GameAlreadyEndedError);
+  });
+
+  it("still resolves a game that has not ended", () => {
+    const live = resolveTurn(SCENARIO, fixture(1), QUIET_TURN_1);
+
+    expect(live.state.gameOver).toBeNull();
+    expect(live.state.turn).toBe(2);
+    expect(live.events.length).toBeGreaterThan(0);
   });
 
   it("ends the symmetric no-op game on COLLAPSE, not the turn limit it shares", () => {
