@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type {
   CardId,
+  Contact,
   Event,
   GameState,
   Operation,
@@ -12,8 +13,11 @@ import type {
 import { EventSchema } from "../contract/index.ts";
 import { deepFreeze } from "../freeze.ts";
 import { loadScenario } from "../scenario.ts";
+import { evaluateEnding } from "./endings.ts";
 import { drawHands } from "./hands.ts";
+import type { TurnOrders } from "./resolve.ts";
 import {
+  GameAlreadyEndedError,
   initiativeFor,
   OrderSideMismatchError,
   OrderValidationError,
@@ -136,7 +140,10 @@ describe("resolveTurn turn skeleton (RD-1)", () => {
       12,
     );
 
-    expect(events.map((event) => event.seq)).toEqual([12, 13, 14]);
+    // Pinned to the starting seq and gaplessness, not to a phase count: #15
+    // adds resolution events to the same turn and must not rewrite this rule.
+    expect(events[0]?.seq).toBe(12);
+    expect(events.map((event) => event.seq)).toEqual(events.map((_, index) => 12 + index));
   });
 
   it("emits ordersAccepted for both sides as the replay input", () => {
@@ -450,6 +457,491 @@ describe("resolveTurn dispatch", () => {
     expect(new Set(played)).toEqual(new Set(FULL_HAND));
     expect(kinds(first.events, "orderFizzled")).toEqual([]);
     expect(kinds(second.events, "orderFizzled")).toEqual([]);
+  });
+});
+
+describe("resolveTurn consequence phases (RD-1 phases 4–7)", () => {
+  const QUIET: TurnOrders = {
+    BLUE: orderSet("BLUE", 1, []),
+    RED: orderSet("RED", 1, []),
+  };
+
+  it("recomputes supply, promoting a port the placeholder could only call THIN", () => {
+    const { state, events } = resolveTurn(SCENARIO, fixture(1), QUIET);
+
+    expect(region(state, "R-01").supply.BLUE).toBe("IN_SUPPLY");
+    // Own-supply only: `RegionView` exposes `ownSupply`, never the enemy's.
+    expect(kinds(events, "supplyChanged")).toContainEqual(
+      expect.objectContaining({
+        regionId: "R-01",
+        side: "BLUE",
+        from: "THIN",
+        to: "IN_SUPPLY",
+        visibleTo: { BLUE: true, RED: false },
+      }),
+    );
+  });
+
+  it("attritions an out-of-supply garrison and lets phase 6 flip the margin it crosses", () => {
+    // R-03 is BLUE-held and unreachable from BLUE's port past NEUTRAL R-02, so
+    // it lands THIN: 11 presence drains to 9, which no longer clears RD-13's
+    // margin over an empty region.
+    const { state, events } = resolveTurn(
+      SCENARIO,
+      fixture(1, (draft) => {
+        region(draft, "R-03").presence = { BLUE: 11, RED: 0 };
+      }),
+      QUIET,
+    );
+
+    expect(kinds(events, "attrition")).toContainEqual(
+      expect.objectContaining({ regionId: "R-03", side: "BLUE", amount: 2 }),
+    );
+    expect(region(state, "R-03").presence.BLUE).toBe(9);
+    expect(kinds(events, "controlChanged")).toContainEqual(
+      expect.objectContaining({
+        regionId: "R-03",
+        from: "BLUE",
+        to: "CONTESTED",
+        // RD-9 discloses control fully in M1.
+        visibleTo: { BLUE: true, RED: true },
+      }),
+    );
+  });
+
+  it("scores unrest against the flip phase 6 produced, change and contest together", () => {
+    const { state, events } = resolveTurn(
+      SCENARIO,
+      fixture(1, (draft) => {
+        region(draft, "R-03").presence = { BLUE: 11, RED: 0 };
+      }),
+      QUIET,
+    );
+
+    // Held → CONTESTED is both RD-5 terms at once: +1 change, +1 contested.
+    expect(region(state, "R-03").unrest).toBe(2);
+    expect(kinds(events, "unrestChanged")).toEqual([
+      expect.objectContaining({ regionId: "R-03", from: 0, to: 2 }),
+    ]);
+    // Unrest read the previous turn end (BLUE) and RD-8's end-of-evaluation
+    // write then advanced the snapshot to this one — order, not coincidence.
+    expect(region(state, "R-03").lastController).toBe("CONTESTED");
+  });
+
+  it("reads a turn-N ISR sweep as age 0 through the timers phase (review M8/N3)", () => {
+    const swept = resolveTurn(SCENARIO, fixture(1), {
+      BLUE: orderSet("BLUE", 1, [ops("FOCUSED_ISR_SWEEP", "R-05")]),
+      RED: orderSet("RED", 1, []),
+    });
+    const unswept = resolveTurn(SCENARIO, fixture(1), QUIET);
+
+    expect(swept.state.sides.BLUE.intelAge["R-05"]).toBe(0);
+    expect(unswept.state.sides.BLUE.intelAge["R-05"]).toBe(4);
+    // The other side is untouched: intel age is stored per side.
+    expect(swept.state.sides.RED.intelAge["R-05"]).toBe(4);
+  });
+
+  it("does not credit an operation that fizzled, because it observed nothing", () => {
+    // The two-sided advance tension: RED's advance into R-04 fizzles once
+    // BLUE has taken its support region, so RED never sets foot there and its
+    // intel on R-04 ages like any other unobserved region.
+    const { state, events } = resolveTurn(SCENARIO, contestedFixture(1, "BLUE"), {
+      BLUE: orderSet("BLUE", 1, [ops("DELIBERATE_ADVANCE", "R-03")]),
+      RED: orderSet("RED", 1, [ops("DELIBERATE_ADVANCE", "R-04")]),
+    });
+
+    expect(kinds(events, "orderFizzled")).toHaveLength(1);
+    expect(state.sides.RED.intelAge["R-04"]).toBe(4);
+    // BLUE's advance applied, so R-03 is observed and reads CONFIRMED.
+    expect(state.sides.BLUE.intelAge["R-03"]).toBe(0);
+  });
+
+  it("retires link effects and contacts on the turn their expiry lands", () => {
+    const expiring = fixture(3, (draft) => {
+      draft.links["L-01-02"] = {
+        effects: [{ kind: "JAM", side: "RED", expiresTurn: 3 }],
+      };
+      draft.contacts = [
+        { id: "contact-1", side: "BLUE", regionId: "R-05", kind: "recon-activity", expiresTurn: 3 },
+      ] satisfies Contact[];
+    });
+
+    const { state, events } = resolveTurn(SCENARIO, expiring, {
+      BLUE: orderSet("BLUE", 3, []),
+      RED: orderSet("RED", 3, []),
+    });
+
+    expect(state.links["L-01-02"]?.effects).toEqual([]);
+    expect(state.contacts).toEqual([]);
+    expect(kinds(events, "linkEffectExpired")).toEqual([
+      expect.objectContaining({ linkId: "L-01-02", visibleTo: { BLUE: false, RED: true } }),
+    ]);
+    expect(kinds(events, "contactExpired")).toEqual([
+      expect.objectContaining({ visibleTo: { BLUE: true, RED: false } }),
+    ]);
+  });
+
+  it("orders the phases so supply is assigned from what the ops phases left", () => {
+    // R-02 is NEUTRAL and empty, and it is the gap that leaves BLUE's R-03
+    // unreachable from its port. Taking it on turn 1 opens the corridor within
+    // the same turn: phase 4 reads post-ops control, so R-02 and R-03 are both
+    // IN_SUPPLY before phase 5 could have billed either of them.
+    const { state, events } = resolveTurn(SCENARIO, fixture(1), {
+      BLUE: orderSet("BLUE", 1, [ops("DELIBERATE_ADVANCE", "R-02")]),
+      RED: orderSet("RED", 1, []),
+    });
+
+    expect(kinds(events, "supplyChanged")).toContainEqual(
+      expect.objectContaining({ regionId: "R-02", side: "BLUE", from: "NONE", to: "IN_SUPPLY" }),
+    );
+    expect(region(state, "R-03").supply.BLUE).toBe("IN_SUPPLY");
+    // Advanced in at the unsupplied base of 10 (nothing was in supply when the
+    // op resolved) and attritioned by nothing, because supply came first.
+    expect(region(state, "R-02").presence.BLUE).toBe(10);
+    // The only region billed is RED's R-09, still cut off behind NEUTRAL
+    // ground; nothing BLUE holds pays, because the corridor opened first.
+    expect(
+      kinds(events, "attrition").map((event) => ("regionId" in event ? event.regionId : "")),
+    ).toEqual(["R-09"]);
+  });
+});
+
+describe("resolveTurn political upkeep (RD-1 phase 8)", () => {
+  const QUIET_TURN_1: TurnOrders = {
+    BLUE: orderSet("BLUE", 1, []),
+    RED: orderSet("RED", 1, []),
+  };
+
+  /** Resolves `turns` no-op turns from `start`, returning every state in order. */
+  function noOpRun(start: GameState, turns: number): GameState[] {
+    const history: GameState[] = [];
+    let current = start;
+    let seq = 2;
+    for (let index = 0; index < turns; index += 1) {
+      const result = resolveTurn(
+        SCENARIO,
+        current,
+        {
+          BLUE: orderSet("BLUE", current.turn, []),
+          RED: orderSet("RED", current.turn, []),
+        },
+        seq,
+      );
+      seq = (result.events.at(-1)?.seq ?? seq) + 1;
+      current = result.state;
+      history.push(current);
+    }
+    return history;
+  }
+
+  it("charges the opening 1-a-turn drain and keeps the figure to its own side", () => {
+    const { state, events } = resolveTurn(SCENARIO, fixture(1), QUIET_TURN_1);
+
+    expect(state.sides.BLUE.political).toBe(19);
+    expect(state.sides.RED.political).toBe(19);
+    // SC-003 forbids the exact enemy figure; the band is the shared view.
+    expect(kinds(events, "politicalChanged")).toEqual([
+      expect.objectContaining({
+        side: "BLUE",
+        from: 20,
+        to: 19,
+        cause: "habitatNotControlled",
+        visibleTo: { BLUE: true, RED: false },
+      }),
+      expect.objectContaining({
+        side: "RED",
+        cause: "habitatNotControlled",
+        visibleTo: { BLUE: false, RED: true },
+      }),
+    ]);
+    expect(kinds(events, "postureChanged")).toEqual([]);
+  });
+
+  it("announces a posture band crossing to both sides (RD-9)", () => {
+    const strained = fixture(1, (draft) => {
+      draft.sides.BLUE.political = 13;
+    });
+
+    const { events } = resolveTurn(SCENARIO, strained, QUIET_TURN_1);
+
+    expect(kinds(events, "postureChanged")).toEqual([
+      expect.objectContaining({
+        side: "BLUE",
+        band: "STRAINED",
+        visibleTo: { BLUE: true, RED: true },
+      }),
+    ]);
+  });
+
+  it("bills the RD-8 penalty for a habitat that attrition contested away", () => {
+    // R-03 is a HABITAT: 11 presence drains to 9 in phase 5 and phase 6 takes
+    // it CONTESTED, so BLUE's previous turn-end control was itself and its
+    // current turn-end control is not — 2 for holding neither habitat, then 5.
+    const { state, events } = resolveTurn(
+      SCENARIO,
+      fixture(1, (draft) => {
+        region(draft, "R-03").presence = { BLUE: 11, RED: 0 };
+      }),
+      QUIET_TURN_1,
+    );
+
+    expect(state.sides.BLUE.political).toBe(13);
+    expect(
+      kinds(events, "politicalChanged").map((event) => ("cause" in event ? event.cause : "")),
+    ).toEqual(["habitatNotControlled", "habitatLossPenalty", "habitatNotControlled"]);
+  });
+
+  it("writes lastController only after unrest and the penalty have read it", () => {
+    const { state } = resolveTurn(
+      SCENARIO,
+      fixture(1, (draft) => {
+        region(draft, "R-03").presence = { BLUE: 11, RED: 0 };
+      }),
+      QUIET_TURN_1,
+    );
+
+    // Both readers saw BLUE: unrest scored the change (+1) and the contest
+    // (+1), and the penalty fired — and only then did the snapshot advance.
+    expect(region(state, "R-03").unrest).toBe(2);
+    expect(state.sides.BLUE.political).toBe(13);
+    expect(region(state, "R-03").lastController).toBe("CONTESTED");
+  });
+
+  it("holds RD-4's floor: neither side collapses before turn 8", () => {
+    const history = noOpRun(fixture(1), SCENARIO.turnLimit);
+
+    for (const [index, state] of history.slice(0, 7).entries()) {
+      expect({ turn: index + 1, political: state.sides.BLUE.political }).toEqual({
+        turn: index + 1,
+        political: 20 - (index + 1),
+      });
+      expect(state.sides.RED.political).toBeGreaterThan(0);
+    }
+  });
+
+  it("shows the floor is a floor, not immunity: RD-12 attrition erodes it", () => {
+    // RD-4 reasoned the no-op drain is 1/turn against 20 and so never
+    // collapses. RD-12's THIN attrition, which landed after that note, drains
+    // each side's unreachable habitat 40 -> 10 over 15 turns; on turn 16 it
+    // falls below RD-13's margin, both sides lose a habitat, and both pay the
+    // constraint penalty in the same upkeep. That is the DRAW-shaped position
+    // slice C's ladder has to resolve, and it lands on the turn limit itself.
+    const history = noOpRun(fixture(1), SCENARIO.turnLimit);
+    const last = history.at(-1);
+
+    expect(region(history[14] ?? fixture(1), "R-03").control).toBe("BLUE");
+    // The turn does not advance past the ending (RD-1 phase 11).
+    expect(last?.turn).toBe(SCENARIO.turnLimit);
+    expect(region(last ?? fixture(1), "R-03").control).toBe("CONTESTED");
+    expect(last?.sides.BLUE.political).toBe(-2);
+    expect(last?.sides.RED.political).toBe(-2);
+  });
+});
+
+describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
+  const QUIET_TURN_1: TurnOrders = {
+    BLUE: orderSet("BLUE", 1, []),
+    RED: orderSet("RED", 1, []),
+  };
+
+  /** A turn-1 board RED cannot survive: it ends on WIPEOUT the moment it resolves. */
+  function wipedOut(): GameState {
+    return fixture(1, (draft) => {
+      for (const state of Object.values(draft.regions)) {
+        state.presence.RED = 0;
+      }
+    });
+  }
+
+  /**
+   * Plays no-op turns from `start` until the game ends or `limit` turns have
+   * passed, returning every resolved state. This is the whole turn loop under
+   * test, not a phase of it.
+   */
+  function play(start: GameState, limit: number): GameState[] {
+    const history: GameState[] = [];
+    let current = start;
+    let seq = 2;
+    for (let index = 0; index < limit && current.gameOver === null; index += 1) {
+      const result = resolveTurn(
+        SCENARIO,
+        current,
+        {
+          BLUE: orderSet("BLUE", current.turn, []),
+          RED: orderSet("RED", current.turn, []),
+        },
+        seq,
+      );
+      seq = (result.events.at(-1)?.seq ?? seq) + 1;
+      current = result.state;
+      history.push(current);
+    }
+    return history;
+  }
+
+  it("banks a completed objective and tells only the side whose objective it is", () => {
+    const ready = fixture(1, (draft) => {
+      region(draft, "R-03").fort = 3;
+    });
+
+    const { state, events } = resolveTurn(SCENARIO, ready, QUIET_TURN_1);
+
+    expect(state.objectiveHistory).toEqual([
+      { objectiveId: "blue-fortify-habitat", side: "BLUE", turn: 1 },
+    ]);
+    expect(kinds(events, "objectiveCompleted")).toEqual([
+      expect.objectContaining({
+        objectiveId: "blue-fortify-habitat",
+        side: "BLUE",
+        points: 4,
+        // Under-disclosed until T024 splits public from secret objectives.
+        visibleTo: { BLUE: true, RED: false },
+      }),
+    ]);
+  });
+
+  it("stores the ending once, announces it to both sides, and stops the clock", () => {
+    const doomed = wipedOut();
+
+    const { state, events } = resolveTurn(SCENARIO, doomed, QUIET_TURN_1);
+
+    expect(state.gameOver).toEqual({
+      reason: "WIPEOUT",
+      winner: "BLUE",
+      endedOnTurn: 1,
+      points: { BLUE: 0, RED: 0 },
+    });
+    expect(kinds(events, "gameEnded")).toEqual([
+      expect.objectContaining({ visibleTo: { BLUE: true, RED: true } }),
+    ]);
+    // Exactly one, so the stream carries the ending once (FR-012/FR-019).
+    expect(kinds(events, "gameEnded")).toHaveLength(1);
+    // RD-1 phase 11: no increment, and no hand drawn for a turn nobody plays.
+    expect(state.turn).toBe(1);
+    expect(state.sides.BLUE.hand).toEqual(doomed.sides.BLUE.hand);
+  });
+
+  it("leaves the stored record unfrozen, nested points included", () => {
+    // The log deep-freezes what it is handed, so `gameEnded` must carry a deep
+    // copy. A shallow spread passes an outer-object check while still sharing
+    // `record.points` — which emission then freezes, leaving one field of a
+    // live `GameState` frozen and every region beside it writable. The
+    // assertion has to reach into `points` to catch that.
+    const { state, events } = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1);
+
+    expect(Object.isFrozen(state.gameOver)).toBe(false);
+    expect(Object.isFrozen(state.gameOver?.points)).toBe(false);
+    // The emitted copy is frozen and is a different object, as history must be.
+    const ended = kinds(events, "gameEnded")[0];
+    expect(Object.isFrozen(ended)).toBe(true);
+    expect(ended?.kind === "gameEnded" ? ended.record.points : null).not.toBe(
+      state.gameOver?.points,
+    );
+  });
+
+  it("stores the record it computed rather than one anybody can re-derive", () => {
+    // FR-012: the ending is computed once and stored. Re-evaluating the same
+    // finished state yields an equal but *distinct* record, so identity is
+    // what proves the stored one was never quietly replaced — and identity is
+    // checkable without resolving again, which the guard below now forbids.
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+    const recomputed = evaluateEnding(SCENARIO, finished);
+
+    expect(recomputed).toEqual(finished.gameOver);
+    expect(recomputed).not.toBe(finished.gameOver);
+  });
+
+  it("refuses to resolve a game that has already ended", () => {
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+    const before = JSON.stringify(finished);
+    const orders: TurnOrders = {
+      BLUE: orderSet("BLUE", finished.turn, []),
+      RED: orderSet("RED", finished.turn, []),
+    };
+
+    // The error names the ending, so a server loop or replay driver that
+    // reached here learns which record it should have been reading.
+    expect(() => resolveTurn(SCENARIO, finished, orders)).toThrow(GameAlreadyEndedError);
+    try {
+      resolveTurn(SCENARIO, finished, orders);
+      expect.unreachable("resolveTurn must reject a finished game");
+    } catch (error) {
+      expect(error).toBeInstanceOf(GameAlreadyEndedError);
+      const ended = error as GameAlreadyEndedError;
+      expect(ended.record.reason).toBe("WIPEOUT");
+      expect(ended.record.endedOnTurn).toBe(1);
+      expect(ended.record).toBe(finished.gameOver);
+      expect(ended.message).toContain("turn 1");
+    }
+    // Nothing ran: no phase moved the board and no post-game event exists to
+    // append to a stream that must reproduce the match on its own (FR-019).
+    expect(JSON.stringify(finished)).toBe(before);
+  });
+
+  it("rejects a finished game before it so much as validates the orders", () => {
+    const finished = resolveTurn(SCENARIO, wipedOut(), QUIET_TURN_1).state;
+
+    // Orders that would fail validation on a live game: the lifecycle guard
+    // has to answer first, or the caller is told the wrong thing about why.
+    expect(() =>
+      resolveTurn(SCENARIO, finished, {
+        BLUE: orderSet("BLUE", finished.turn + 99, [ops("DELIBERATE_ADVANCE", "R-06")]),
+        RED: orderSet("RED", finished.turn, []),
+      }),
+    ).toThrow(GameAlreadyEndedError);
+  });
+
+  it("still resolves a game that has not ended", () => {
+    const live = resolveTurn(SCENARIO, fixture(1), QUIET_TURN_1);
+
+    expect(live.state.gameOver).toBeNull();
+    expect(live.state.turn).toBe(2);
+    expect(live.events.length).toBeGreaterThan(0);
+  });
+
+  it("ends the symmetric no-op game on COLLAPSE, not the turn limit it shares", () => {
+    // The ladder's order is what decides this: both sides collapse on turn 16
+    // (slice B's RD-12 attrition finding) and turn 16 is also the turn limit.
+    const history = play(fixture(1), SCENARIO.turnLimit + 2);
+    const last = history.at(-1);
+
+    expect(history).toHaveLength(SCENARIO.turnLimit);
+    expect(last?.gameOver).toEqual({
+      reason: "COLLAPSE",
+      winner: "DRAW",
+      endedOnTurn: SCENARIO.turnLimit,
+      points: { BLUE: 6, RED: 0 },
+    });
+    // BLUE banked its PORT objective at turn 8 and still only drew.
+    expect(last?.objectiveHistory).toEqual([
+      { objectiveId: "blue-hold-port", side: "BLUE", turn: 8 },
+    ]);
+  });
+
+  it("plays a scripted game to a WIPEOUT, attrition doing the work", () => {
+    // RED reduced to a 10-strong garrison in R-09 with no port to supply it:
+    // the region falls out of supply, drains 2 a turn, and RED runs out of
+    // presence on turn 5 — before its political capital runs out.
+    const thin = fixture(1, (draft) => {
+      for (const [regionId, state] of Object.entries(draft.regions)) {
+        state.presence.RED = regionId === "R-09" ? 10 : 0;
+        if (state.control === "RED" && regionId !== "R-09") {
+          state.control = "NEUTRAL";
+          state.lastController = "NEUTRAL";
+        }
+      }
+    });
+
+    const history = play(thin, SCENARIO.turnLimit);
+    const last = history.at(-1);
+
+    expect(last?.gameOver).toMatchObject({
+      reason: "WIPEOUT",
+      winner: "BLUE",
+      endedOnTurn: 5,
+    });
+    expect(history).toHaveLength(5);
+    expect(last?.sides.RED.political).toBeGreaterThan(0);
   });
 });
 

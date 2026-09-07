@@ -1,0 +1,343 @@
+import type {
+  CompletionRecord,
+  GameState,
+  ObjectiveCondition,
+  ObjectiveDef,
+  ProgressRecord,
+  RegionState,
+  RegionType,
+  Scenario,
+  Side,
+} from "../contract/index.ts";
+import { effectiveCapacity, isActive } from "./legality.ts";
+
+/**
+ * Objectives (RD-11; RD-1 phase 9).
+ *
+ * Pure like every other rules module: it returns the next `GameState` and
+ * reports what changed as data; the resolver owns the event log.
+ *
+ * Progress lives in `GameState.objectiveProgress` as `ProgressRecord` rows
+ * **keyed per region or link where the condition quantifies over them**
+ * (review B4/M9) — one row per link for `suppressLinkAdjacent`, one per region
+ * for `contestRegionType` and `reduceEnemyPresence`, and a single `key: null`
+ * row where the condition names its own target or counts the whole board. A
+ * condition that needs no memory at all (`controlRegion`, `fortifyRegionType`)
+ * writes no rows: it is a predicate over the current turn end, and a row would
+ * be state nothing reads.
+ *
+ * Every condition is evaluated against **turn-end state** — phase 9 runs after
+ * the RD-13 control recompute, so `control` here is the turn-end control RD-11
+ * means, and phase 5 has already retired the expired contacts and link effects
+ * a "still active" test would otherwise have to exclude. `isActive` is applied
+ * anyway, so a condition cannot silently depend on that call order.
+ */
+
+/**
+ * A completion, plus the points it scored.
+ *
+ * The points ride *alongside* the record rather than inside it. `data-model`
+ * fixes `CompletionRecord` at `{objectiveId, side, turn}`, and that is exactly
+ * what goes into `objectiveHistory`; widening it to carry a score would put a
+ * field in stored, replayed state that the contract does not declare. Keeping
+ * the two separate also makes it structurally impossible to spread the score
+ * into the history by accident.
+ *
+ * It exists so the resolver never has to look a completed objective back up in
+ * the scenario to learn what it was worth: this phase read the objective to
+ * decide the completion, so it already knows, and handing that value on means
+ * `objectiveCompleted` cannot be emitted with a score nobody verified.
+ */
+export interface ScoredCompletion {
+  /** Exactly the data-model's shape — what `objectiveHistory` stores. */
+  record: CompletionRecord;
+  /** The objective's declared `points`, read where the completion was decided. */
+  points: number;
+}
+
+/** Newly completed objectives plus the state carrying their rows and records. */
+export interface ObjectiveResult {
+  state: GameState;
+  completions: ScoredCompletion[];
+}
+
+const SIDES: readonly Side[] = ["BLUE", "RED"];
+
+/** Effective capacity at which `suppressLinkAdjacent` counts a link closed. */
+const SUPPRESSED_CAPACITY = 0;
+
+function enemyOf(side: Side): Side {
+  return side === "BLUE" ? "RED" : "BLUE";
+}
+
+/**
+ * A progress row's identity: the objective plus the key it quantifies over.
+ *
+ * The separator is written as an escape rather than a literal control byte,
+ * and it is NUL rather than something readable because ids are only
+ * `z.string().min(1)` — nothing forbids a space or a dash inside one, so any
+ * printable separator could let two different (objective, key) pairs collide
+ * on one row.
+ */
+function rowKey(objectiveId: string, key: string | null): string {
+  return `${objectiveId}\u0000${key ?? ""}`;
+}
+
+function priorRow(
+  prior: ReadonlyMap<string, ProgressRecord>,
+  objectiveId: string,
+  key: string | null,
+): ProgressRecord {
+  return (
+    prior.get(rowKey(objectiveId, key)) ?? {
+      objectiveId,
+      key,
+      counter: 0,
+      armed: false,
+      failed: false,
+    }
+  );
+}
+
+/**
+ * The scenario's regions of `type` that the state actually tracks, in map
+ * order. Joining the two is what keeps the region-quantified conditions
+ * deterministic and defensive at once: `createGame` gives every scenario
+ * region a state, so a missing one is a state/scenario mismatch that must
+ * quantify over nothing rather than read as an empty region.
+ */
+function regionsOfType(
+  scenario: Scenario,
+  state: GameState,
+  type: RegionType,
+): [string, RegionState][] {
+  const found: [string, RegionState][] = [];
+  for (const region of scenario.map.regions) {
+    if (region.type !== type) {
+      continue;
+    }
+    const current = state.regions[region.id];
+    if (current) {
+      found.push([region.id, current]);
+    }
+  }
+  return found;
+}
+
+/** One condition's verdict for this turn end, plus the rows it carries forward. */
+interface Verdict {
+  rows: ProgressRecord[];
+  completed: boolean;
+}
+
+/**
+ * RD-11's eight conditions.
+ *
+ * `byTurn` bounds the *completion*, not the bookkeeping: counters keep running
+ * past it so the rule reads as one expression rather than two, and an
+ * objective whose deadline has passed simply never completes again.
+ */
+function evaluateCondition(
+  scenario: Scenario,
+  state: GameState,
+  side: Side,
+  objectiveId: string,
+  condition: ObjectiveCondition,
+  prior: ReadonlyMap<string, ProgressRecord>,
+): Verdict {
+  const { turn } = state;
+  const enemy = enemyOf(side);
+
+  switch (condition.type) {
+    case "controlRegion": {
+      const region = state.regions[condition.regionId];
+      return { rows: [], completed: turn <= condition.byTurn && region?.control === side };
+    }
+
+    case "holdRegionType": {
+      const row = priorRow(prior, objectiveId, null);
+      const held = regionsOfType(scenario, state, condition.regionType).filter(
+        ([, region]) => region.control === side,
+      ).length;
+      // Failure is permanent and is only recorded while the objective is still
+      // live: a shortfall after `throughTurn` cannot fail what already ended.
+      const failed = row.failed || (turn <= condition.throughTurn && held < condition.count);
+      return {
+        rows: [{ ...row, failed }],
+        completed: !failed && turn === condition.throughTurn,
+      };
+    }
+
+    case "suppressLinkAdjacent": {
+      const rows: ProgressRecord[] = [];
+      let completed = false;
+      for (const link of scenario.map.links) {
+        if (link.a !== condition.regionId && link.b !== condition.regionId) {
+          continue;
+        }
+        const row = priorRow(prior, objectiveId, link.id);
+        // Both halves are required (review M5): a link the *enemy* closed, or
+        // one the side interdicted without closing, counts for nothing.
+        const closed = effectiveCapacity(scenario, state, link.id) === SUPPRESSED_CAPACITY;
+        const own = (state.links[link.id]?.effects ?? []).some(
+          (effect) => effect.kind === "INTERDICT" && effect.side === side && isActive(effect, turn),
+        );
+        const counter = closed && own ? row.counter + 1 : 0;
+        rows.push({ ...row, counter });
+        completed ||= turn <= condition.byTurn && counter >= condition.consecutiveTurns;
+      }
+      return { rows, completed };
+    }
+
+    case "contestRegionType": {
+      const rows: ProgressRecord[] = [];
+      let completed = false;
+      for (const [regionId, region] of regionsOfType(scenario, state, condition.regionType)) {
+        const row = priorRow(prior, objectiveId, regionId);
+        // Per region, so two regions contested on alternate turns never sum.
+        const counter = region.control === "CONTESTED" ? row.counter + 1 : 0;
+        rows.push({ ...row, counter });
+        completed ||= turn <= condition.byTurn && counter >= condition.consecutiveTurns;
+      }
+      return { rows, completed };
+    }
+
+    case "fortifyRegionType": {
+      const completed = regionsOfType(scenario, state, condition.regionType).some(
+        ([, region]) => region.control === side && region.fort >= condition.level,
+      );
+      return { rows: [], completed };
+    }
+
+    case "reduceEnemyPresence": {
+      const rows: ProgressRecord[] = [];
+      let completed = false;
+      for (const [regionId, region] of regionsOfType(scenario, state, condition.regionType)) {
+        const row = priorRow(prior, objectiveId, regionId);
+        const enemyPresence = region.presence[enemy];
+        // Completion is tested against the arming the row already carried, so
+        // a region cannot arm and complete in the same turn end and nothing is
+        // complete from the start position (review B4).
+        completed ||= row.armed && enemyPresence < condition.below;
+        rows.push({ ...row, armed: row.armed || enemyPresence >= condition.armAt });
+      }
+      return { rows, completed };
+    }
+
+    case "sustainOwnJam": {
+      const rows: ProgressRecord[] = [];
+      let completed = false;
+      for (const link of scenario.map.links) {
+        const row = priorRow(prior, objectiveId, link.id);
+        const jammed = (state.links[link.id]?.effects ?? []).some(
+          (effect) => effect.kind === "JAM" && effect.side === side && isActive(effect, turn),
+        );
+        const counter = jammed ? row.counter + 1 : 0;
+        rows.push({ ...row, counter });
+        completed ||= counter >= condition.turns;
+      }
+      return { rows, completed };
+    }
+
+    case "activeRumorsInEnemyControlled": {
+      const row = priorRow(prior, objectiveId, null);
+      const active = state.contacts.filter(
+        (contact) =>
+          contact.side === side &&
+          isActive(contact, turn) &&
+          state.regions[contact.regionId]?.control === enemy,
+      ).length;
+      const counter = active >= condition.count ? row.counter + 1 : 0;
+      return { rows: [{ ...row, counter }], completed: counter >= condition.consecutiveTurns };
+    }
+  }
+}
+
+/**
+ * RD-1 phase 9: evaluates every objective against the turn end.
+ *
+ * `objectiveProgress` is rebuilt in one canonical order — BLUE's objectives
+ * then RED's, in scenario order, each one's keys in map order — so the array
+ * is a function of the scenario and the turn rather than of write history.
+ * A completed objective is skipped entirely (RD-11: completion is sticky and
+ * each scores once) and its rows are carried through verbatim, which is what
+ * stops a later lapse retro-failing something already banked.
+ */
+export function evaluateObjectives(scenario: Scenario, state: GameState): ObjectiveResult {
+  const prior = new Map<string, ProgressRecord>(
+    state.objectiveProgress.map((row) => [rowKey(row.objectiveId, row.key), row]),
+  );
+  const banked = new Set(state.objectiveHistory.map((record) => record.objectiveId));
+
+  const progress: ProgressRecord[] = [];
+  const completions: ScoredCompletion[] = [];
+  for (const side of SIDES) {
+    for (const objective of scenario.objectives[side]) {
+      if (banked.has(objective.id)) {
+        for (const row of state.objectiveProgress) {
+          if (row.objectiveId === objective.id) {
+            progress.push(row);
+          }
+        }
+        continue;
+      }
+      const verdict = evaluateCondition(
+        scenario,
+        state,
+        side,
+        objective.id,
+        objective.condition,
+        prior,
+      );
+      progress.push(...verdict.rows);
+      if (verdict.completed) {
+        completions.push({
+          record: { objectiveId: objective.id, side, turn: state.turn },
+          points: objective.points,
+        });
+      }
+    }
+  }
+
+  return {
+    state: {
+      ...state,
+      objectiveProgress: progress,
+      objectiveHistory: [
+        ...state.objectiveHistory,
+        ...completions.map((completion) => completion.record),
+      ],
+    },
+    completions,
+  };
+}
+
+/**
+ * A side's score: the points of every objective it has completed (RD-11).
+ *
+ * Derived from `objectiveHistory` rather than stored, because the history is
+ * already the canonical sticky record and a second stored total could disagree
+ * with it. A record naming an objective the scenario no longer declares scores
+ * nothing — a stored game replayed against an edited scenario must degrade,
+ * not throw, and `gameCreated.scenarioHash` is what catches that properly.
+ *
+ * That tolerance is **not** the same situation as `ScoredCompletion`, and the
+ * two should not be made to match. Here the input is history that legitimately
+ * outlives the scenario that produced it, so an unknown id is data. There, the
+ * objective is in hand at the moment the completion is decided, so a missing
+ * one would be an invariant breach — which is why that path has no lookup to
+ * fall back from rather than a tolerant default.
+ */
+export function pointsFor(scenario: Scenario, state: GameState, side: Side): number {
+  const declared = new Map<string, ObjectiveDef>(
+    scenario.objectives[side].map((objective) => [objective.id, objective]),
+  );
+  let total = 0;
+  for (const record of state.objectiveHistory) {
+    if (record.side !== side) {
+      continue;
+    }
+    total += declared.get(record.objectiveId)?.points ?? 0;
+  }
+  return total;
+}

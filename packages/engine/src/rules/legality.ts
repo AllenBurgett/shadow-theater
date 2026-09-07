@@ -28,8 +28,12 @@ import type {
 /** RD-2a `linkReach`: the friendly presence that reaches across a link. */
 const REACH_PRESENCE = 10;
 
-/** RD-7: a link is usable while at least this much capacity survives. */
-const PASSABLE_CAPACITY = 1;
+/**
+ * RD-7: a link is usable while at least this much capacity survives. Exported
+ * because the supply BFS (`supply.ts`) gates traversal on the same threshold
+ * that advance adjacency and redeploy do — one rule, one constant.
+ */
+export const PASSABLE_CAPACITY = 1;
 
 /** RD-5: fortification is illegal from this unrest level up. */
 const FORTIFY_UNREST_LIMIT = 2;
@@ -49,6 +53,11 @@ const NO_EFFECTS: readonly LinkEffect[] = [];
  * the duration the operations stamp, and the `isActive` test everything reads.
  */
 export const EFFECT_DURATION = 2;
+
+/** Anything RD-2a's one timing sentence governs: link effects and contacts. */
+interface Expiring {
+  readonly expiresTurn: number;
+}
 
 /** Resolves a card in the scenario's catalogue; absent = `UNKNOWN_CARD` (RD-2). */
 export function findCard(scenario: Scenario, cardId: CardId): Card | undefined {
@@ -71,13 +80,21 @@ function presenceAt(state: GameState, side: Side, regionId: string): number {
   return regionAt(state, regionId)?.presence[side] ?? 0;
 }
 
-/** Whether `effect` is still in force on `turn` (see `EFFECT_DURATION`). */
-export function isActive(effect: LinkEffect, turn: number): boolean {
-  return turn < effect.expiresTurn;
+/**
+ * Whether `entry` is still in force on `turn` (see `EFFECT_DURATION`).
+ *
+ * Deliberately structural rather than `LinkEffect`-typed: RD-2a states one
+ * timing rule for "link/contact effect timing", so `timers.ts` retires a
+ * `Contact` through this same predicate. The prototype used the looser
+ * `expiresTurn >= turn` for rumors alone (mechanics-inventory §9) and purged
+ * them a turn late; that split is the deviation, not the rule.
+ */
+export function isActive(entry: Expiring, turn: number): boolean {
+  return turn < entry.expiresTurn;
 }
 
 /** The far end of `link` from `regionId`, or undefined if it is not incident. */
-function otherEndpoint(link: Link, regionId: string): string | undefined {
+export function otherEndpoint(link: Link, regionId: string): string | undefined {
   if (link.a === regionId) {
     return link.b;
   }
@@ -89,11 +106,13 @@ function otherEndpoint(link: Link, regionId: string): string | undefined {
 
 /**
  * RD-7 effective capacity: base minus the active INTERDICT effects, floored at
- * 0. JAM never reduces capacity — it masks intel (RD-9). Supply (T019),
- * advance adjacency, and redeploy all read this rather than `link.capacity`.
+ * 0. JAM never reduces capacity — it masks intel (RD-9). The supply BFS
+ * (`supply.ts`), advance adjacency, and redeploy all read this rather than
+ * `link.capacity`.
  *
- * It lives here because issue #14's touch surface has no links module; it is a
- * candidate to move to its own module when #15 lands the supply BFS.
+ * It lives here because issue #14's touch surface had no links module; with
+ * #15 it has three readers across three modules and is a candidate to move to
+ * one of its own.
  */
 export function effectiveCapacity(scenario: Scenario, state: GameState, linkId: string): number {
   const link = findLink(scenario, linkId);

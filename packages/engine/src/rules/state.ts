@@ -79,6 +79,14 @@ const SIDES: readonly Side[] = ["BLUE", "RED"];
 export const UNOBSERVED_INTEL_AGE = 3;
 
 /**
+ * Intel age for a region a side observed this resolution — RD-9 renders 0 as
+ * CONFIRMED. Shared by the ISR sweep, which writes it during the ops phase,
+ * and by the timers phase's aging step, which must re-establish it after the
+ * increment (review M8/N3).
+ */
+export const OBSERVED_INTEL_AGE = 0;
+
+/**
  * The control the scenario declares, by side setup list.
  *
  * Initial control is applied declaratively rather than derived from presence:
@@ -116,9 +124,11 @@ function initialPresence(scenario: Scenario, regionId: string): RegionState["pre
  * THIN; else that side is present → CUT; else NONE.
  *
  * No region starts IN_SUPPLY, because that tier requires the port-reachability
- * BFS over effective link capacity, which is **T019 in issue #15**. The supply
- * recompute landing there runs in the turn phase and supersedes this
- * initialisation — this is a deliberate placeholder, not the final rule.
+ * BFS over effective link capacity, which lives in `supply.ts`. RD-1's phase-4
+ * `recomputeSupply` runs the full ladder and supersedes this initialisation on
+ * the first resolved turn — this is a deliberate placeholder, not the final
+ * rule, and the consequence is that turn 1 advances all base at 10 (RD-2a)
+ * because no region is yet in supply.
  */
 function initialSupply(
   control: Control,
@@ -165,7 +175,7 @@ function createSideState(scenario: Scenario, side: Side, hand: CardId[]): SideSt
     // presence > 0), not from the control list: presence is what the rule
     // reads every turn thereafter, so creation must not use a second notion.
     const observed = (scenario.setup.sides[side].presence[region.id] ?? 0) > 0;
-    intelAge[region.id] = observed ? 0 : UNOBSERVED_INTEL_AGE;
+    intelAge[region.id] = observed ? OBSERVED_INTEL_AGE : UNOBSERVED_INTEL_AGE;
   }
   return {
     political: scenario.resources.politicalStart,
