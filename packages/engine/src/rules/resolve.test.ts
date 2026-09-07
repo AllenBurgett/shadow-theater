@@ -812,6 +812,30 @@ describe("resolveTurn objectives and endings (RD-1 phases 9–10)", () => {
     expect(state.sides.BLUE.hand).toEqual(doomed.sides.BLUE.hand);
   });
 
+  it("leaves the stored record unfrozen, nested points included", () => {
+    // The log deep-freezes what it is handed, so `gameEnded` must carry a deep
+    // copy. A shallow spread passes an outer-object check while still sharing
+    // `record.points` — which emission then freezes, leaving one field of a
+    // live `GameState` frozen and every region beside it writable. The
+    // assertion has to reach into `points` to catch that.
+    const doomed = fixture(1, (draft) => {
+      for (const state of Object.values(draft.regions)) {
+        state.presence.RED = 0;
+      }
+    });
+
+    const { state, events } = resolveTurn(SCENARIO, doomed, QUIET_TURN_1);
+
+    expect(Object.isFrozen(state.gameOver)).toBe(false);
+    expect(Object.isFrozen(state.gameOver?.points)).toBe(false);
+    // The emitted copy is frozen and is a different object, as history must be.
+    const ended = kinds(events, "gameEnded")[0];
+    expect(Object.isFrozen(ended)).toBe(true);
+    expect(ended?.kind === "gameEnded" ? ended.record.points : null).not.toBe(
+      state.gameOver?.points,
+    );
+  });
+
   it("never recomputes a stored ending, however often it is resolved again", () => {
     const doomed = fixture(1, (draft) => {
       for (const state of Object.values(draft.regions)) {

@@ -421,14 +421,18 @@ function applySupply(context: TurnContext, state: GameState): GameState {
  * turn. The two expiries commute with everything else here — nothing in this
  * phase reads a link effect or a contact.
  *
- * Payloads are copied before emission: the log deep-freezes what it is handed,
- * and these objects are still reachable from the state the caller passed in.
+ * Payloads are deep-copied before emission: the log deep-freezes what it is
+ * handed, and these objects are still reachable from the state the caller
+ * passed in. `structuredClone` rather than a spread even where the payload is
+ * flat today -- a spread is correct only for as long as the shape stays flat,
+ * and a nested field added later would reintroduce the freeze-live-state bug
+ * silently, with no test of ours failing to say so.
  */
 function applyTimers(context: TurnContext, state: GameState): GameState {
   const links = expireLinkEffects(state);
   for (const { linkId, effect } of links.expired) {
     context.log.emit(
-      { kind: "linkEffectExpired", linkId, effect: { ...effect } },
+      { kind: "linkEffectExpired", linkId, effect: structuredClone(effect) },
       visibleToOnly(effect.side),
     );
   }
@@ -436,7 +440,7 @@ function applyTimers(context: TurnContext, state: GameState): GameState {
   const contacts = expireContacts(links.state);
   for (const contact of contacts.expired) {
     context.log.emit(
-      { kind: "contactExpired", contact: { ...contact } },
+      { kind: "contactExpired", contact: structuredClone(contact) },
       visibleToOnly(contact.side),
     );
   }
@@ -556,9 +560,13 @@ function applyEnding(context: TurnContext, state: GameState): GameState {
   if (record === null) {
     return state;
   }
-  // Copied before emission: the log deep-freezes what it is handed, and the
-  // record it is handed is the very object the state stores.
-  context.log.emit({ kind: "gameEnded", record: { ...record } }, visibleToAll());
+  // Deep-copied before emission, not spread: the log freezes everything
+  // *reachable* from the payload, and `GameOverRecord` nests a `points`
+  // object. A shallow copy hands over a new outer record whose `points` is
+  // still the very object the state below stores, so emission would freeze
+  // live state through it — the one field of the returned `GameState` that is
+  // frozen while every region beside it is not.
+  context.log.emit({ kind: "gameEnded", record: structuredClone(record) }, visibleToAll());
   return { ...state, gameOver: record };
 }
 
