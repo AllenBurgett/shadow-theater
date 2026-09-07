@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EventSchema } from "../contract/index.ts";
+import { EventSchema, type Operation } from "../contract/index.ts";
 import {
   createEventLog,
   isHidden,
@@ -78,6 +78,43 @@ describe("createEventLog", () => {
 
     expect(snapshot).toHaveLength(1);
     expect(log.events()).toHaveLength(2);
+  });
+
+  it("deep-freezes each emitted event so recorded history cannot be rewritten", () => {
+    const log = createEventLog({ turn: 3, nextSeq: 1 });
+    const operations: Operation[] = [
+      { cardId: "SPOOF_CONTACTS", target: { kind: "REGION", id: "R-05" }, theme: "recon-activity" },
+    ];
+
+    const event = log.emit(
+      { kind: "ordersAccepted", side: "RED", operations },
+      visibleToOnly("RED"),
+    );
+    if (event.kind !== "ordersAccepted") {
+      throw new Error("expected an ordersAccepted event");
+    }
+
+    // The envelope: a flipped stamp would rewrite who observed a past turn.
+    expect(() => {
+      event.visibleTo.BLUE = true;
+    }).toThrow(TypeError);
+    // A nested payload: `operations` is recorded replay input (review M6), and
+    // the spread aliases the caller's array, so it must be frozen too.
+    expect(() => {
+      event.operations.push({
+        cardId: "FORTIFY_REGION",
+        target: { kind: "REGION", id: "R-12" },
+        theme: null,
+      });
+    }).toThrow(TypeError);
+
+    const recorded = log.events()[0];
+    expect(recorded?.visibleTo).toEqual({ BLUE: false, RED: true });
+    if (recorded?.kind !== "ordersAccepted") {
+      throw new Error("expected the recorded event to be ordersAccepted");
+    }
+    expect(recorded.operations).toHaveLength(1);
+    expect(operations).toHaveLength(1);
   });
 
   it("starts an empty log at its configured seq", () => {

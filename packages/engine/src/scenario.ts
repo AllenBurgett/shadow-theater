@@ -1,5 +1,6 @@
 import type { Scenario, ScenarioIssue } from "./contract/index.ts";
 import { parseScenario } from "./contract/index.ts";
+import { deepFreeze } from "./freeze.ts";
 import { canonicalJson, fnv1a32Hex } from "./hash.ts";
 
 /**
@@ -22,16 +23,6 @@ export class ScenarioLoadError extends Error {
     this.name = "ScenarioLoadError";
     this.issues = issues;
   }
-}
-
-function deepFreeze<T>(value: T): T {
-  if (value === null || typeof value !== "object" || Object.isFrozen(value)) {
-    return value;
-  }
-  for (const entry of Object.values(value as Record<string, unknown>)) {
-    deepFreeze(entry);
-  }
-  return Object.freeze(value);
 }
 
 /**

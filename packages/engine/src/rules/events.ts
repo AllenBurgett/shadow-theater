@@ -1,4 +1,5 @@
 import type { Event, Side, Visibility } from "../contract/index.ts";
+import { deepFreeze } from "../freeze.ts";
 
 /**
  * Event emission for the rules layer.
@@ -10,7 +11,9 @@ import type { Event, Side, Visibility } from "../contract/index.ts";
  * The log owns two invariants that RD-9 depends on:
  *  - `seq` is monotonic per game and never reused;
  *  - `visibleTo` is stamped AT EMISSION from that turn's observability and
- *    copied, never aliased, so historical visibility can never change later.
+ *    copied, never aliased, so historical visibility can never change later;
+ *    every emitted event is deep-frozen, so neither the stamp nor a nested
+ *    payload can be rewritten after the fact.
  */
 
 /** Envelope keys the log owns; a payload must not carry them. */
@@ -25,7 +28,11 @@ export type EventPayload = WithoutEnvelope<Event>;
 export type VisibilityPredicate = (side: Side, payload: EventPayload) => boolean;
 
 export interface EventLog {
-  /** Appends `payload` with the next `seq`, this log's `turn`, and `visibleTo`. */
+  /**
+   * Appends `payload` with the next `seq`, this log's `turn`, and `visibleTo`,
+   * and returns the deep-frozen record. Note that freezing reaches into the
+   * payload's own nested objects: emit a copy of anything still being built.
+   */
   emit(payload: EventPayload, visibleTo: Visibility): Event;
   /** A frozen snapshot of everything emitted so far. */
   events(): readonly Event[];
@@ -89,13 +96,18 @@ export function createEventLog(options: EventLogOptions): EventLog {
       // The spread reassembles a specific union member; TypeScript cannot
       // track that through a distributive `Omit`, so the envelope is
       // reattached with a single assertion at the one place that owns it.
-      const event = {
+      //
+      // Deep-frozen at emission, not merely copied: the spread is shallow, so
+      // without this a caller holding the returned event (or the array it
+      // passed in) could rewrite recorded history — flip a `visibleTo` stamp
+      // or edit an `ordersAccepted` operation list, which is replay input.
+      const event = deepFreeze({
         ...payload,
         v: 1,
         seq,
         turn,
         visibleTo: { BLUE: visibleTo.BLUE, RED: visibleTo.RED },
-      } as Event;
+      } as Event);
       seq += 1;
       emitted.push(event);
       return event;

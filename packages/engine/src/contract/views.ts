@@ -25,6 +25,30 @@ import { CompletionRecordSchema, LinkEffectSchema } from "./state.ts";
  * exact enemy presence, enemy-side supply, own contacts echoed back.
  */
 
+/** RD-9's disclosure granularity for enemy presence estimates. */
+const ESTIMATE_STEP = 10;
+
+/**
+ * Enemy presence disclosure, with both of RD-9's clauses enforced by the
+ * contract rather than trusted to the projection: "enemy presence estimates
+ * round to nearest 10; UNKNOWN → null estimate". Both are information
+ * boundaries, not formatting — exact enemy presence is an SC-003 forbidden
+ * field, so an unrounded estimate is itself the leak, and an estimate carried
+ * alongside UNKNOWN discloses what the viewer has not observed. Each failure
+ * reports at `estimate`, so it lands field-level like a scenario load error.
+ */
+export const EnemyEstimateSchema = z
+  .object({
+    confidence: IntelConfidenceSchema,
+    /** Rounded to the nearest 10; null when confidence is UNKNOWN. */
+    estimate: z.int().min(0).max(100).multipleOf(ESTIMATE_STEP).nullable(),
+  })
+  .refine((enemy) => enemy.confidence !== "UNKNOWN" || enemy.estimate === null, {
+    message: "UNKNOWN confidence must carry a null estimate (RD-9)",
+    path: ["estimate"],
+  });
+export type EnemyEstimate = z.infer<typeof EnemyEstimateSchema>;
+
 export const RegionViewSchema = z.object({
   id: z.string().min(1),
   /** Control is fully disclosed in M1 (RD-9; fogging deferred to M2). */
@@ -32,11 +56,7 @@ export const RegionViewSchema = z.object({
   fort: z.int().min(0).max(3),
   unrest: z.int().min(0).max(3),
   ownPresence: z.int().min(0).max(100),
-  enemy: z.object({
-    confidence: IntelConfidenceSchema,
-    /** Rounded to the nearest 10; null when confidence is UNKNOWN. */
-    estimate: z.int().min(0).max(100).nullable(),
-  }),
+  enemy: EnemyEstimateSchema,
   ownSupply: SupplyStateSchema,
   intelAge: z.int().min(0),
 });
