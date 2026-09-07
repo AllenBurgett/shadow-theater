@@ -122,6 +122,18 @@ describe("createEventLog", () => {
     expect(log.events()).toEqual([]);
     expect(log.nextSeq()).toBe(42);
   });
+
+  // `EventSchema` types `turn` and `seq` as `z.int().min(1)`; the guards fail
+  // at the offending call instead of at the wire edge a resolver later.
+  it.each([0, -1, 1.5])("rejects the invalid turn %p", (turn) => {
+    expect(() => createEventLog({ turn, nextSeq: 1 })).toThrow(/turn must be a positive integer/);
+  });
+
+  it.each([0, -1, 1.5])("rejects the invalid nextSeq %p", (nextSeq) => {
+    expect(() => createEventLog({ turn: 1, nextSeq })).toThrow(
+      /nextSeq must be a positive integer/,
+    );
+  });
 });
 
 describe("visibility helpers", () => {

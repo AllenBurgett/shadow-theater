@@ -87,8 +87,20 @@ export function isHidden(visibleTo: Visibility): boolean {
 
 /** Creates an append-only event log for one turn's resolution. */
 export function createEventLog(options: EventLogOptions): EventLog {
-  const { turn } = options;
-  let seq = options.nextSeq;
+  const { turn, nextSeq } = options;
+
+  // `EventSchema` types both as `z.int().min(1)`, but the rules layer stays
+  // Zod-free, so the envelope's own constructor guards them the way `rng.ts`
+  // guards its bounds. Without this an out-of-range `turn` surfaces at the
+  // wire edge or deep in a resolver, far from the call that caused it.
+  if (!Number.isInteger(turn) || turn < 1) {
+    throw new Error(`createEventLog: turn must be a positive integer, received ${turn}`);
+  }
+  if (!Number.isInteger(nextSeq) || nextSeq < 1) {
+    throw new Error(`createEventLog: nextSeq must be a positive integer, received ${nextSeq}`);
+  }
+
+  let seq = nextSeq;
   const emitted: Event[] = [];
 
   return {

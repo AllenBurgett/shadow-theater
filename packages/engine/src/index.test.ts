@@ -1,14 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  type Config,
   ConfigSchema,
   canonicalJson,
   createEventLog,
   createRng,
   fnv1a32,
+  type LlmConfig,
+  type LoggingConfig,
   loadScenario,
   OrderSetSchema,
   ScenarioLoadError,
+  type ServerConfig,
   visibleToAll,
 } from "./index.ts";
 
@@ -46,7 +50,15 @@ describe("@shadow/engine entry point", () => {
   });
 
   it("ships the least-disclosure config defaults", () => {
-    expect(ConfigSchema.parse({})).toEqual({
+    // Annotated with the exported inferred types, so the entry point dropping
+    // one — or a block's shape drifting — is a typecheck failure rather than a
+    // silently missing export.
+    const config: Config = ConfigSchema.parse({});
+    const server: ServerConfig = config.server;
+    const llm: LlmConfig = config.llm;
+    const logging: LoggingConfig = config.logging;
+
+    expect({ server, llm, logging }).toEqual({
       server: { port: 3000, host: "127.0.0.1" },
       llm: {
         enabled: false,

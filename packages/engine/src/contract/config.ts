@@ -37,6 +37,20 @@ export const LoggingConfigSchema = z
   })
   .prefault({});
 
+/**
+ * Resolved types for the nested blocks, so a consumer can name one without
+ * indexing into `Config` (`createApp(config: ServerConfig)`).
+ *
+ * Output types only, deliberately: R6 requires the input/output split at a
+ * *boundary* using `.default()`, and the boundary is the whole document —
+ * `ConfigSchema.parse(...)` — which exports both below. No block is ever
+ * parsed on its own, so a nested input type would name a shape nothing
+ * receives.
+ */
+export type ServerConfig = z.output<typeof ServerConfigSchema>;
+export type LlmConfig = z.output<typeof LlmConfigSchema>;
+export type LoggingConfig = z.output<typeof LoggingConfigSchema>;
+
 export const ConfigSchema = z
   .object({
     server: ServerConfigSchema,
