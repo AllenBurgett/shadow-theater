@@ -293,16 +293,30 @@ function resolveOperation(
 
   // The data-model gives these board facts their own event kinds; emitting
   // them only inside `orderApplied.effects` would bury them behind an
-  // acting-side-only record. Stamped conservatively for now — the full
-  // observability model is T024 (issue #16).
+  // acting-side-only record. Both directions are emitted — an addition that
+  // surfaced on its own while its removal did not would be exactly the
+  // asymmetry this loop exists to avoid. These are the *operation-driven*
+  // removals; `linkEffectExpired` and `contactExpired` are the timers-phase
+  // kinds and belong to T020 (issue #15). Stamped conservatively for now —
+  // the full observability model is T024 (issue #16).
+  //
+  // `presenceChanged`, `fortChanged` and `intelRefreshed` have no event kind
+  // of their own in the union, so they stay inside `orderApplied.effects`.
   for (const effect of effects) {
     if (effect.kind === "linkEffectAdded") {
       context.log.emit(
         { kind: "linkEffectAdded", linkId: effect.linkId, effect: effect.effect },
         visibleToOnly(side),
       );
+    } else if (effect.kind === "linkEffectRemoved") {
+      context.log.emit(
+        { kind: "linkEffectRemoved", linkId: effect.linkId, effect: effect.effect },
+        visibleToOnly(side),
+      );
     } else if (effect.kind === "contactCreated") {
       context.log.emit({ kind: "contactCreated", contact: effect.contact }, visibleToOnly(side));
+    } else if (effect.kind === "contactRemoved") {
+      context.log.emit({ kind: "contactRemoved", contact: effect.contact }, visibleToOnly(side));
     }
   }
 

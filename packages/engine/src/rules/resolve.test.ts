@@ -315,6 +315,59 @@ describe("resolveTurn event stream", () => {
     });
   });
 
+  it("surfaces operation-driven removals as their own board facts", () => {
+    const contested = fixture(1, (draft) => {
+      const link = draft.links["L-01-02"];
+      link?.effects.push(
+        { kind: "INTERDICT", side: "RED", expiresTurn: 3 },
+        { kind: "JAM", side: "RED", expiresTurn: 3 },
+      );
+      draft.contacts.push({
+        id: "contact-deadbeef",
+        side: "RED",
+        regionId: "R-01",
+        kind: "recon-activity",
+        expiresTurn: 3,
+      });
+    });
+    const { events } = resolveTurn(SCENARIO, contested, {
+      BLUE: orderSet("BLUE", 1, [
+        ops("SECURE_CORRIDOR", "L-01-02"),
+        ops("COUNTERINTEL_SWEEP", "R-01"),
+      ]),
+      RED: orderSet("RED", 1, []),
+    });
+
+    expect(kinds(events, "linkEffectRemoved")).toMatchObject([
+      {
+        linkId: "L-01-02",
+        effect: { kind: "INTERDICT", side: "RED" },
+        visibleTo: { BLUE: true, RED: false },
+      },
+      { linkId: "L-01-02", effect: { kind: "JAM", side: "RED" } },
+    ]);
+    expect(kinds(events, "contactRemoved")).toMatchObject([
+      { contact: { id: "contact-deadbeef" }, visibleTo: { BLUE: true, RED: false } },
+    ]);
+    // The timers-phase kinds stay with T020 (issue #15).
+    expect(kinds(events, "linkEffectExpired")).toEqual([]);
+    expect(kinds(events, "contactExpired")).toEqual([]);
+  });
+
+  it("emits no removal event when an operation finds nothing to strip", () => {
+    const { events } = resolveTurn(SCENARIO, fixture(1), {
+      BLUE: orderSet("BLUE", 1, [
+        ops("SECURE_CORRIDOR", "L-01-02"),
+        ops("COUNTERINTEL_SWEEP", "R-01"),
+      ]),
+      RED: orderSet("RED", 1, []),
+    });
+
+    expect(cardsApplied(events)).toEqual(["BLUE:COUNTERINTEL_SWEEP", "BLUE:SECURE_CORRIDOR"]);
+    expect(kinds(events, "linkEffectRemoved")).toEqual([]);
+    expect(kinds(events, "contactRemoved")).toEqual([]);
+  });
+
   it("keeps card identities to the acting side (RD-9)", () => {
     const { events } = resolveTurn(SCENARIO, fixture(1), {
       BLUE: orderSet("BLUE", 1, [ops("DELIBERATE_ADVANCE", "R-02")]),
@@ -329,10 +382,27 @@ describe("resolveTurn event stream", () => {
   });
 
   it("emits events that satisfy the wire schema", () => {
-    const { events } = resolveTurn(SCENARIO, fixture(1), {
-      BLUE: orderSet("BLUE", 1, [ops("SPOOF_CONTACTS", "R-05")]),
+    const seeded = fixture(1, (draft) => {
+      draft.links["L-01-02"]?.effects.push({ kind: "JAM", side: "RED", expiresTurn: 3 });
+      draft.contacts.push({
+        id: "contact-deadbeef",
+        side: "RED",
+        regionId: "R-01",
+        kind: "supply-buildup",
+        expiresTurn: 3,
+      });
+    });
+    const { events } = resolveTurn(SCENARIO, seeded, {
+      BLUE: orderSet("BLUE", 1, [
+        ops("SPOOF_CONTACTS", "R-05"),
+        ops("COUNTERINTEL_SWEEP", "R-01"),
+        ops("SECURE_CORRIDOR", "L-01-02"),
+      ]),
       RED: orderSet("RED", 1, [ops("JAMMING_CORRIDOR", "L-11-12")]),
     });
+
+    expect(events.map((event) => event.kind)).toContain("linkEffectRemoved");
+    expect(events.map((event) => event.kind)).toContain("contactRemoved");
 
     for (const event of events) {
       expect(EventSchema.safeParse(event).success).toBe(true);
