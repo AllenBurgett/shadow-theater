@@ -220,6 +220,22 @@ function checkScenarioInvariants(scenario: ScenarioShape, ctx: z.RefinementCtx):
     }
   }
 
+  // The projection types `legalTargets` as `z.record(CardIdSchema, …)`, which
+  // requires a key per card id, and `legalTargets` builds from the catalogue —
+  // so a scenario missing a card would produce a `SideView` that fails its own
+  // contract. Expressed as covering the enum rather than a count, so it stays
+  // honest if the catalogue ever grows (issue #14 slice C1).
+  const catalogue = new Set(scenario.cards.map((card) => card.id));
+  for (const cardId of CardIdSchema.options) {
+    if (!catalogue.has(cardId)) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Card catalogue is missing "${cardId}"`,
+        path: ["cards"],
+      });
+    }
+  }
+
   if (scenario.handSize > scenario.cards.length) {
     ctx.addIssue({
       code: "custom",
@@ -227,6 +243,10 @@ function checkScenarioInvariants(scenario: ScenarioShape, ctx: z.RefinementCtx):
       path: ["handSize"],
     });
   }
+
+  // Initial control is applied declaratively by `createGame`, so a region
+  // claimed twice has no coherent starting controller (issue #14 slice B).
+  const claimed = new Map<string, string>();
 
   for (const side of SIDES) {
     const setup = scenario.setup.sides[side];
@@ -247,6 +267,15 @@ function checkScenarioInvariants(scenario: ScenarioShape, ctx: z.RefinementCtx):
           path: ["setup", "sides", side, "control", index],
         });
       }
+      const claimant = claimed.get(regionId);
+      if (claimant !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Setup control of "${regionId}" is already claimed by ${claimant}`,
+          path: ["setup", "sides", side, "control", index],
+        });
+      }
+      claimed.set(regionId, side);
     }
   }
 

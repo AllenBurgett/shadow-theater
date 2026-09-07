@@ -1,18 +1,28 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  CONTROL_MARGIN,
   type Config,
   ConfigSchema,
   canonicalJson,
   createEventLog,
+  createGame,
   createRng,
+  drawHand,
+  effectiveCapacity,
   fnv1a32,
+  initiativeFor,
   type LlmConfig,
   type LoggingConfig,
+  legalTargets,
   loadScenario,
   OrderSetSchema,
+  OrderValidationError,
+  resolveControl,
+  resolveTurn,
   ScenarioLoadError,
   type ServerConfig,
+  validateOrders,
   visibleToAll,
 } from "./index.ts";
 
@@ -28,6 +38,19 @@ describe("@shadow/engine entry point", () => {
     expect(typeof fnv1a32).toBe("function");
     expect(typeof canonicalJson).toBe("function");
     expect(ScenarioLoadError.prototype).toBeInstanceOf(Error);
+  });
+
+  it("re-exports the first rules slice", () => {
+    expect(typeof createGame).toBe("function");
+    expect(typeof resolveControl).toBe("function");
+    expect(typeof drawHand).toBe("function");
+    expect(typeof legalTargets).toBe("function");
+    expect(typeof effectiveCapacity).toBe("function");
+    expect(typeof validateOrders).toBe("function");
+    expect(typeof resolveTurn).toBe("function");
+    expect(initiativeFor(1)).toBe("BLUE");
+    expect(OrderValidationError.prototype).toBeInstanceOf(Error);
+    expect(CONTROL_MARGIN).toBe(10);
   });
 
   it("re-exports the contract schemas", () => {
@@ -77,8 +100,9 @@ describe("@shadow/engine entry point", () => {
     );
   });
 
-  it("composes the loader, the RNG, and the event log", () => {
+  it("composes the loader, the RNG, the event log, and game creation", () => {
     const scenario = loadScenario(scenarioJson);
+    const state = createGame(scenario, scenario.id);
     const hand = createRng(scenario.id)
       .fork("hand:BLUE:1")
       .sample(scenario.cards, scenario.handSize);
@@ -95,6 +119,7 @@ describe("@shadow/engine entry point", () => {
     );
 
     expect(hand).toHaveLength(6);
+    expect(state.sides.BLUE.hand).toEqual(hand.map((card) => card.id));
     expect(header.kind).toBe("gameCreated");
     if (header.kind === "gameCreated") {
       expect(header.scenarioHash).toBe(scenario.hash);
