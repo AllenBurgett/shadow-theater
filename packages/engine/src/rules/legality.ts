@@ -34,8 +34,11 @@ const PASSABLE_CAPACITY = 1;
 /** RD-5: fortification is illegal from this unrest level up. */
 const FORTIFY_UNREST_LIMIT = 2;
 
-/** RD-2a: the fort ceiling. */
-const MAX_FORT = 3;
+/**
+ * RD-2a: the fort ceiling. Exported because `surface.ts` refuses at the same
+ * level that this module declines to offer a target — one rule, one constant.
+ */
+export const MAX_FORT = 3;
 
 const NO_EFFECTS: readonly LinkEffect[] = [];
 

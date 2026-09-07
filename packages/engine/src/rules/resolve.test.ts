@@ -102,6 +102,32 @@ describe("resolveTurn turn skeleton (RD-1)", () => {
     expect(redFirst.events[0]).toMatchObject({ kind: "turnStarted", initiative: "RED", turn: 2 });
   });
 
+  it("leaves seq 1 to the gameCreated header and starts turn 1 at 2", () => {
+    const { events } = resolveTurn(SCENARIO, fixture(1), {
+      BLUE: orderSet("BLUE", 1, []),
+      RED: orderSet("RED", 1, []),
+    });
+
+    expect(events[0]?.seq).toBe(2);
+  });
+
+  it("chains turns into one gapless run behind that header", () => {
+    const first = resolveTurn(SCENARIO, fixture(1), {
+      BLUE: orderSet("BLUE", 1, []),
+      RED: orderSet("RED", 1, []),
+    });
+    const second = resolveTurn(
+      SCENARIO,
+      first.state,
+      { BLUE: orderSet("BLUE", 2, []), RED: orderSet("RED", 2, []) },
+      (first.events.at(-1)?.seq ?? 0) + 1,
+    );
+    // Seq 1 stands in for the header the stream owner emits (issue #18).
+    const seqs = [1, ...first.events.map((event) => event.seq), ...second.events.map((e) => e.seq)];
+
+    expect(seqs).toEqual(seqs.map((_, index) => index + 1));
+  });
+
   it("numbers events from the given seq so the stream stays monotonic per game", () => {
     const { events } = resolveTurn(
       SCENARIO,

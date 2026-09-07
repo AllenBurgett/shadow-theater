@@ -53,6 +53,16 @@ import { validateOrders } from "./validate.ts";
 /** The seq the very first event of a game takes (the `gameCreated` header). */
 const FIRST_SEQ = 1;
 
+/**
+ * Where turn 1 starts numbering. `gameCreated` is a mandatory header at
+ * `FIRST_SEQ`, so seq 1 is spoken for in every real stream and the first
+ * resolved turn legitimately begins after it — defaulting to `FIRST_SEQ` would
+ * collide with the header the stream owner is required to emit, and `seq` is
+ * monotonic per game and part of the replay format, so a duplicate corrupts
+ * rather than merely repeats.
+ */
+const FIRST_TURN_SEQ = FIRST_SEQ + 1;
+
 export interface TurnOrders {
   BLUE: OrderSet;
   RED: OrderSet;
@@ -131,14 +141,16 @@ interface TurnContext {
  *
  * `nextSeq` continues the per-game event sequence (data-model: `seq` is
  * monotonic per game, starting at 1 with `gameCreated`). It is a parameter
- * because neither `GameState` nor engine-api's signature carries the counter;
- * a caller that stores the stream passes `log.nextSeq()` from the last turn.
+ * because neither `GameState` nor engine-api's signature carries the counter.
+ * The default is only right for the first turn of a stream whose header sits
+ * at seq 1: a caller that stores the stream passes the previous turn's
+ * `log.nextSeq()` rather than relying on it.
  */
 export function resolveTurn(
   scenario: Scenario,
   state: GameState,
   orders: TurnOrders,
-  nextSeq: number = FIRST_SEQ,
+  nextSeq: number = FIRST_TURN_SEQ,
 ): TurnResult {
   const turn = state.turn;
   const initiative = initiativeFor(turn);

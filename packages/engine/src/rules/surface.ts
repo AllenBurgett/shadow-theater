@@ -1,6 +1,6 @@
 import type { Control, Effect, GameState, RegionState, Scenario, Side } from "../contract/index.ts";
 import { resolveControl } from "./control.ts";
-import { EFFECT_DURATION, supportingRegions } from "./legality.ts";
+import { EFFECT_DURATION, MAX_FORT, supportingRegions } from "./legality.ts";
 import type { ControlChange, OpOutcome } from "./state.ts";
 import { withLink, withRegion } from "./state.ts";
 
@@ -32,7 +32,6 @@ const REDEPLOY_SHARE = 0.25;
 const REDEPLOY_MIN = 5;
 const REDEPLOY_MAX = 20;
 
-const MAX_FORT = 3;
 const MIN_PRESENCE = 0;
 const MAX_PRESENCE = 100;
 
