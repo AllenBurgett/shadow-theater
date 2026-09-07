@@ -459,6 +459,26 @@ describe("evaluateObjectives bookkeeping (RD-11)", () => {
     expect(rowsFor(after, HOLD_PORT)).toEqual(rowsFor(state, HOLD_PORT));
   });
 
+  it("hands the resolver each completion's score, so nothing looks it back up", () => {
+    const state = structuredClone(BASE);
+    state.turn = 3;
+    regionOf(state, "R-10").control = "BLUE";
+    regionOf(state, "R-03").fort = 3;
+
+    const { completions } = evaluateObjectives(SCENARIO, state);
+
+    expect(completions).toEqual([
+      { record: { objectiveId: CONTROL_RELAY, side: "BLUE", turn: 3 }, points: 6 },
+      { record: { objectiveId: FORTIFY_HABITAT, side: "BLUE", turn: 3 }, points: 4 },
+    ]);
+    // The score rides alongside the record; `objectiveHistory` keeps the
+    // data-model's three fields and gains no `points` of its own.
+    expect(evaluateObjectives(SCENARIO, state).state.objectiveHistory).toEqual([
+      { objectiveId: CONTROL_RELAY, side: "BLUE", turn: 3 },
+      { objectiveId: FORTIFY_HABITAT, side: "BLUE", turn: 3 },
+    ]);
+  });
+
   it("attributes each completion to the side whose objective it is", () => {
     const state = turnEnd(BASE, 3, (draft) => {
       regionOf(draft, "R-10").control = "BLUE";

@@ -38,7 +38,7 @@ export {
 } from "./rules/events.ts";
 export { drawHand, drawHands } from "./rules/hands.ts";
 export { effectiveCapacity, legalTargets } from "./rules/legality.ts";
-export type { ObjectiveResult } from "./rules/objectives.ts";
+export type { ObjectiveResult, ScoredCompletion } from "./rules/objectives.ts";
 export { evaluateObjectives, pointsFor } from "./rules/objectives.ts";
 export type { PoliticalCause, PoliticalDrain, PostureChange } from "./rules/political.ts";
 export {

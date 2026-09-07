@@ -556,21 +556,19 @@ function applyPolitical(context: TurnContext, state: GameState): GameState {
  */
 function applyObjectives(context: TurnContext, state: GameState): GameState {
   const { state: next, completions } = evaluateObjectives(context.scenario, state);
-  for (const completion of completions) {
-    const objective = context.scenario.objectives[completion.side].find(
-      (entry) => entry.id === completion.objectiveId,
-    );
+  // The score travels with the completion (`ScoredCompletion`), read where the
+  // objective was in hand. Looking it back up here would mean coping with not
+  // finding it, and the only cheap way to cope — emitting 0 — would write a
+  // scoring lie into a permanent record to avoid admitting an invariant broke.
+  for (const { record, points } of completions) {
     context.log.emit(
       {
         kind: "objectiveCompleted",
-        objectiveId: completion.objectiveId,
-        side: completion.side,
-        // `evaluateObjectives` only ever completes an objective it read from
-        // this same scenario, so the fallback is unreachable and is the one
-        // branch here coverage cannot exercise; the type cannot know that.
-        points: objective?.points ?? 0,
+        objectiveId: record.objectiveId,
+        side: record.side,
+        points,
       },
-      visibleToOnly(completion.side),
+      visibleToOnly(record.side),
     );
   }
   return next;
