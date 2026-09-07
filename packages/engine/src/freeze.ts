@@ -10,11 +10,25 @@
 
 /** Recursively freezes `value` and everything reachable from it, in place. */
 export function deepFreeze<T>(value: T): T {
-  if (value === null || typeof value !== "object" || Object.isFrozen(value)) {
-    return value;
+  freezeReachable(value, new WeakSet<object>());
+  return value;
+}
+
+/**
+ * `Object.isFrozen` is deliberately NOT used as a short circuit: it reports
+ * only that a node's own properties are sealed, so a shallow-frozen container
+ * — `Object.freeze([op])` handed to `emit`, say — would hide fully writable
+ * children behind it and defeat the "everything reachable" guarantee above.
+ * The visited set is what terminates instead, so a cycle is safe and a shared
+ * subgraph is walked once.
+ */
+function freezeReachable(value: unknown, seen: WeakSet<object>): void {
+  if (value === null || typeof value !== "object" || seen.has(value)) {
+    return;
   }
+  seen.add(value);
   for (const entry of Object.values(value as Record<string, unknown>)) {
-    deepFreeze(entry);
+    freezeReachable(entry, seen);
   }
-  return Object.freeze(value);
+  Object.freeze(value);
 }

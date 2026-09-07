@@ -132,6 +132,26 @@ describe("createEventLog", () => {
     expect(operations).toHaveLength(1);
   });
 
+  it("freezes a payload array the caller had only shallow-frozen", () => {
+    const log = createEventLog({ turn: 2, nextSeq: 1 });
+    const operation: Operation = {
+      cardId: "FORTIFY_REGION",
+      target: { kind: "REGION", id: "R-03" },
+      theme: null,
+    };
+    const operations: Operation[] = [operation];
+    // Sealing the array alone leaves its elements writable — recorded replay
+    // input would still be editable through the caller's own reference.
+    Object.freeze(operations);
+
+    log.emit({ kind: "ordersAccepted", side: "BLUE", operations }, visibleToOnly("BLUE"));
+
+    expect(Object.isFrozen(operation)).toBe(true);
+    expect(() => {
+      operation.theme = "armour-massing";
+    }).toThrow(TypeError);
+  });
+
   it("starts an empty log at its configured seq", () => {
     const log = createEventLog({ turn: 7, nextSeq: 42 });
     expect(log.events()).toEqual([]);

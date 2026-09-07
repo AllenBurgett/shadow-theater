@@ -16,9 +16,12 @@ export default defineConfig({
         "packages/web/src/main.tsx",
       ],
       // Per-glob thresholds: the engine rules core carries a real gate from
-      // issue #13's suite onward (it currently measures 100% on all four
-      // metrics; the margin is headroom, and issue #14 tightens it as
-      // resolveTurn and the projection land). The global numbers stay at 0
+      // issue #13's suite onward. It measures 100% on all four metrics today.
+      // `functions` is pinned at exactly 100 on purpose — a wholly untested
+      // new function must fail the gate — while statements, branches and
+      // lines sit just below the measured value as buffer against incidental
+      // churn; issue #14 raises those three as resolveTurn and the projection
+      // land. The global numbers stay at 0
       // because `packages/server` and `packages/web` are still scaffolds —
       // a single global figure would be dominated by the engine and would
       // wave their 0% through; issues #18/#19 add their own glob entries.
