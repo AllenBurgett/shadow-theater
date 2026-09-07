@@ -1,11 +1,16 @@
-import { z } from "zod";
-
 /**
- * The contract boundary is the only part of the engine allowed to import Zod
- * (research R6). Rules and planner modules stay Zod-free.
+ * The contract boundary — the only part of `@shadow/engine` allowed to import
+ * Zod (research R6). Rules, planner, and projection modules consume the
+ * inferred plain types and never touch a schema.
  *
- * The full scenario / order / event / view schema set lands in issue #13.
+ * Every schema exports its inferred type alongside it.
  */
-export const ScenarioIdSchema = z.string().min(1);
 
-export type ScenarioId = z.infer<typeof ScenarioIdSchema>;
+export * from "./config.ts";
+export * from "./enums.ts";
+export * from "./events.ts";
+export * from "./orders.ts";
+export * from "./scenario.ts";
+export * from "./spike.ts";
+export * from "./state.ts";
+export * from "./views.ts";
