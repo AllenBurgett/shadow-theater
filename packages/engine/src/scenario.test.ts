@@ -99,6 +99,31 @@ describe("loadScenario field-level errors", () => {
     expect(issuePaths(error)).toContain("setup.sides.RED.control.0");
   });
 
+  it("rejects a catalogue that does not cover every card id", () => {
+    const error = loadFailure((json) => {
+      (json as Json).cards = (json as Json).cards.filter(
+        (card: { id: string }) => card.id !== "SECURE_CORRIDOR",
+      );
+    });
+    expect(issuePaths(error)).toContain("cards");
+  });
+
+  it("rejects a region claimed by both sides at setup", () => {
+    // Initial control is applied declaratively by createGame, so a region in
+    // two control lists has no coherent starting controller.
+    const error = loadFailure((json) => {
+      (json as Json).setup.sides.RED.control.push("R-01");
+    });
+    expect(issuePaths(error)).toContain("setup.sides.RED.control.3");
+  });
+
+  it("rejects a region listed twice in one side's control list", () => {
+    const error = loadFailure((json) => {
+      (json as Json).setup.sides.BLUE.control.push("R-01");
+    });
+    expect(issuePaths(error)).toContain("setup.sides.BLUE.control.2");
+  });
+
   it("rejects an unsupported schemaVersion", () => {
     const error = loadFailure((json) => {
       (json as Json).schemaVersion = 2;
