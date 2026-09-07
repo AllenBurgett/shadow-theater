@@ -96,6 +96,18 @@ export const ObjectiveViewSchema = z.object({
 });
 export type ObjectiveView = z.infer<typeof ObjectiveViewSchema>;
 
+/**
+ * The enemy-facing objective slot. `ObjectiveViewSchema` admits either
+ * visibility because a side legitimately sees its own secret objectives; the
+ * enemy's are the first entry in this file's SC-003 forbidden-field list, so
+ * the enemy slot pins the literal and a projection bug can no longer put a
+ * secret objective on the wire and still validate.
+ */
+export const PublicObjectiveViewSchema = ObjectiveViewSchema.extend({
+  visibility: z.literal("public"),
+});
+export type PublicObjectiveView = z.infer<typeof PublicObjectiveViewSchema>;
+
 /** A rendered observed effect, produced by `renderAar` (review N4). */
 export const AarEntrySchema = z.object({
   seq: z.int().min(1),
@@ -134,8 +146,9 @@ export const SideViewSchema = z.object({
   links: z.array(LinkViewSchema),
   contacts: z.array(ContactViewSchema),
   objectives: z.object({
+    /** Own secrets included: a side sees its own objectives in full. */
     own: z.array(ObjectiveViewSchema),
-    enemyPublic: z.array(ObjectiveViewSchema),
+    enemyPublic: z.array(PublicObjectiveViewSchema),
   }),
   completions: z.object({
     own: z.array(CompletionRecordSchema),

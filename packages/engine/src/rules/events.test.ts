@@ -55,6 +55,21 @@ describe("createEventLog", () => {
     expect(EventSchema.safeParse(applied).success).toBe(true);
   });
 
+  // data-model pins `redOrdersSource` at `{BLUE: false, RED: false}` — it is
+  // evaluation evidence, never player-facing (FR-014/IB-003).
+  it("holds redOrdersSource to its never-player-facing stamp", () => {
+    const log = createEventLog({ turn: 5, nextSeq: 1 });
+    const hidden = log.emit({ kind: "redOrdersSource", source: "FALLBACK" }, visibleToNone());
+    const leaked = log.emit({ kind: "redOrdersSource", source: "NATIVE" }, visibleToOnly("RED"));
+
+    expect(EventSchema.safeParse(hidden).success).toBe(true);
+    const result = EventSchema.safeParse(leaked);
+    expect(result.success).toBe(false);
+    expect((result.error?.issues ?? []).map((issue) => issue.path.join("."))).toContain(
+      "visibleTo.RED",
+    );
+  });
+
   it("copies visibleTo rather than aliasing the caller's object", () => {
     const log = createEventLog({ turn: 2, nextSeq: 1 });
     const stamp = { BLUE: true, RED: false };

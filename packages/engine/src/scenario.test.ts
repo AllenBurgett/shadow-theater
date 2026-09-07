@@ -295,7 +295,7 @@ describe("vespera-01 scenario invariants", () => {
     }
   });
 
-  it("weights objectives 6 public / 4 secret with 20 points a side", () => {
+  it("scores public objectives 6 points and secret 4, 20 a side", () => {
     for (const side of ["BLUE", "RED"] as const) {
       const objectives = scenario.objectives[side];
       const publics = objectives.filter((objective) => objective.visibility === "public");

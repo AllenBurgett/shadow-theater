@@ -189,6 +189,11 @@ export const EventSchema = z.discriminatedUnion("kind", [
   z.object({
     ...envelope,
     kind: z.literal("redOrdersSource"),
+    // Evaluation evidence, never player-facing (FR-014/IB-003, analysis A07):
+    // data-model pins its stamp at `{BLUE: false, RED: false}`, so the
+    // envelope's `visibleTo` is overridden with those literals rather than
+    // left to the emitter to get right. It carries no model text (FR-018).
+    visibleTo: z.object({ BLUE: z.literal(false), RED: z.literal(false) }),
     source: RedOrdersSourceSchema,
     reason: z.string().min(1).optional(),
   }),
