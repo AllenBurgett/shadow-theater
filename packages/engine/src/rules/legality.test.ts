@@ -95,7 +95,7 @@ describe("legality on a state that does not track a scenario element", () => {
   // validateOrders must answer for whatever state and id it is handed — from
   // the wire, from a model, or from a replay of an older scenario revision —
   // so a missing element reads as an empty position rather than throwing.
-  it("reads a missing link as capacity 0 and a missing region as empty", () => {
+  it("reads an untracked link as effect-free and an untracked region as empty", () => {
     const { "L-03-04": _link, ...links } = BASE.links;
     const { "R-01": _region, ...regions } = BASE.regions;
     const partial: GameState = { ...BASE, links, regions };

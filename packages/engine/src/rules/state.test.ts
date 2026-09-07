@@ -131,13 +131,15 @@ describe("createGame", () => {
   });
 
   it("starts an uncontrolled region where the side is present CUT", () => {
+    // A foothold inside an enemy-held region: BLUE 20 against RED 40 still
+    // resolves RED, so the declaration stays coherent for the loader.
     const scenario = variantScenario((json) => {
       const setup = json.setup as { sides: { BLUE: { presence: Record<string, number> } } };
-      setup.sides.BLUE.presence["R-02"] = 20;
+      setup.sides.BLUE.presence["R-11"] = 20;
     });
     const state = createGame(scenario, SEED);
 
-    expect(state.regions["R-02"]?.supply).toEqual({ BLUE: "CUT", RED: "NONE" });
+    expect(state.regions["R-11"]?.supply).toEqual({ BLUE: "CUT", RED: "THIN" });
   });
 
   it("starts every link with no effects", () => {

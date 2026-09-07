@@ -44,7 +44,12 @@ export { effectiveCapacity, legalTargets } from "./rules/legality.ts";
  * it; the server (#18) must not ship against it until #15 lands.
  */
 export type { TurnOrders, TurnResult } from "./rules/resolve.ts";
-export { initiativeFor, OrderValidationError, resolveTurn } from "./rules/resolve.ts";
+export {
+  initiativeFor,
+  OrderSideMismatchError,
+  OrderValidationError,
+  resolveTurn,
+} from "./rules/resolve.ts";
 export { createGame, UNOBSERVED_INTEL_AGE } from "./rules/state.ts";
 export type { OrderValidation } from "./rules/validate.ts";
 export { validateOrders } from "./rules/validate.ts";

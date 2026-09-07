@@ -83,9 +83,10 @@ export const UNOBSERVED_INTEL_AGE = 3;
  *
  * Initial control is applied declaratively rather than derived from presence:
  * the prototype set it explicitly (`game.js:158-167`) and the scenario authors
- * it. `state.test.ts` carries the creation invariant that the declaration
- * agrees with `resolveControl` of the same setup presence, so a scenario
- * cannot declare a control its own numbers contradict.
+ * it. `loadScenario` rejects a scenario whose declared control disagrees with
+ * `resolveControl` of its own setup presence, so a document that reaches here
+ * cannot contradict itself; `state.test.ts` keeps the same assertion as a
+ * cheap guard that the two layers still agree.
  *
  * Note that a per-side control list can only express BLUE, RED, or NEUTRAL —
  * a CONTESTED start position is unauthorable today. A region claimed by more

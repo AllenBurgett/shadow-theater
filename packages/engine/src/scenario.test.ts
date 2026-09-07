@@ -99,6 +99,39 @@ describe("loadScenario field-level errors", () => {
     expect(issuePaths(error)).toContain("setup.sides.RED.control.0");
   });
 
+  it("rejects declared control that its own setup presence contradicts", () => {
+    // The declaration is what `createGame` applies, so an incoherent one would
+    // sit in the board until the turn-end recompute (RD-13) flipped it.
+    const contested = loadFailure((json) => {
+      (json as Json).setup.sides.RED.presence["R-01"] = 55;
+    });
+    expect(issuePaths(contested)).toContain("setup.sides.BLUE.control.0");
+
+    const enemyHeld = loadFailure((json) => {
+      (json as Json).setup.sides.BLUE.presence["R-01"] = 0;
+      (json as Json).setup.sides.RED.presence["R-01"] = 60;
+    });
+    expect(issuePaths(enemyHeld)).toContain("setup.sides.BLUE.control.0");
+
+    const empty = loadFailure((json) => {
+      (json as Json).setup.sides.BLUE.presence["R-01"] = 0;
+    });
+    expect(issuePaths(empty)).toContain("setup.sides.BLUE.control.0");
+  });
+
+  it("rejects presence that resolves to a side which never claimed the region", () => {
+    const error = loadFailure((json) => {
+      (json as Json).setup.sides.BLUE.presence["R-05"] = 30;
+      (json as Json).setup.sides.RED.presence["R-06"] = 30;
+    });
+
+    expect(issuePaths(error)).toEqual([
+      "setup.sides.BLUE.presence.R-05",
+      "setup.sides.RED.presence.R-06",
+    ]);
+    expect((error as ScenarioLoadError).message).toContain("resolves to");
+  });
+
   it("rejects a catalogue that does not cover every card id", () => {
     const error = loadFailure((json) => {
       (json as Json).cards = (json as Json).cards.filter(

@@ -13,7 +13,12 @@ import { EventSchema } from "../contract/index.ts";
 import { deepFreeze } from "../freeze.ts";
 import { loadScenario } from "../scenario.ts";
 import { drawHands } from "./hands.ts";
-import { initiativeFor, OrderValidationError, resolveTurn } from "./resolve.ts";
+import {
+  initiativeFor,
+  OrderSideMismatchError,
+  OrderValidationError,
+  resolveTurn,
+} from "./resolve.ts";
 import { createGame } from "./state.ts";
 
 const RAW = readFileSync(new URL("../scenarios/vespera-01.json", import.meta.url), "utf8");
@@ -237,6 +242,27 @@ describe("resolveTurn fizzle semantics (RD-1)", () => {
     } catch (error) {
       expect((error as OrderValidationError).side).toBe("RED");
       expect((error as OrderValidationError).rejection.violations[0]?.code).toBe("TARGET_ILLEGAL");
+    }
+  });
+});
+
+describe("resolveTurn order routing", () => {
+  it("refuses a set filed under a key that disagrees with its own side", () => {
+    // Otherwise validation reads one side's hand and budgets while resolution
+    // applies the other side's legality and effects.
+    const blue = orderSet("BLUE", 1, []);
+    const red = orderSet("RED", 1, []);
+
+    expect(() => resolveTurn(SCENARIO, fixture(1), { BLUE: red, RED: red })).toThrow(
+      OrderSideMismatchError,
+    );
+    expect(() => resolveTurn(SCENARIO, fixture(1), { BLUE: blue, RED: blue })).toThrow(
+      OrderSideMismatchError,
+    );
+    try {
+      resolveTurn(SCENARIO, fixture(1), { BLUE: red, RED: red });
+    } catch (error) {
+      expect(error).toMatchObject({ key: "BLUE", declared: "RED" });
     }
   });
 });

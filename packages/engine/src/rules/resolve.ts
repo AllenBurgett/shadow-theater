@@ -88,6 +88,29 @@ export class OrderValidationError extends Error {
   }
 }
 
+/**
+ * Thrown when a `TurnOrders` key disagrees with the `OrderSet.side` it holds.
+ *
+ * `validateOrders` keys off `orders.side` while resolution keys off the
+ * property the set is filed under, so `{BLUE: {side: "RED", …}}` would check
+ * RED's hand and budgets and then resolve the operations as BLUE. Like an
+ * invalid set arriving here, that is a routing mistake in the caller, not a
+ * game outcome.
+ */
+export class OrderSideMismatchError extends Error {
+  /** The `TurnOrders` property the set was filed under. */
+  readonly key: Side;
+  /** The side the set itself declares. */
+  readonly declared: Side;
+
+  constructor(key: Side, declared: Side) {
+    super(`Order set filed under ${key} declares side ${declared}`);
+    this.name = "OrderSideMismatchError";
+    this.key = key;
+    this.declared = declared;
+  }
+}
+
 /** RD-1: BLUE on odd turns, RED on even — derived from the turn, never stored. */
 export function initiativeFor(turn: number): Side {
   return turn % 2 === 1 ? "BLUE" : "RED";
@@ -120,6 +143,14 @@ export function resolveTurn(
   const turn = state.turn;
   const initiative = initiativeFor(turn);
   const order: readonly Side[] = initiative === "BLUE" ? ["BLUE", "RED"] : ["RED", "BLUE"];
+
+  // Routing first: everything below reads the hand and budgets through
+  // `orders.side` but applies effects as the key, so the two must agree.
+  for (const side of order) {
+    if (orders[side].side !== side) {
+      throw new OrderSideMismatchError(side, orders[side].side);
+    }
+  }
 
   // Phase 1 — validation against pre-turn state (FR-005, RD-2/RD-6).
   for (const side of order) {
