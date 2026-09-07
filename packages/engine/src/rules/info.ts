@@ -2,7 +2,7 @@ import type { Contact, ContactKind, Effect, GameState, Side } from "../contract/
 import type { Rng } from "../rng.ts";
 import { EFFECT_DURATION } from "./legality.ts";
 import type { OpOutcome } from "./state.ts";
-import { withContacts, withSide } from "./state.ts";
+import { OBSERVED_INTEL_AGE, withContacts, withSide } from "./state.ts";
 import { addLinkEffect } from "./surface.ts";
 
 /**
@@ -15,9 +15,6 @@ import { addLinkEffect } from "./surface.ts";
 
 /** RD-2a: the theme a SPOOF without one falls back to. */
 const DEFAULT_CONTACT_KIND: ContactKind = "recon-activity";
-
-/** RD-9: age 0 reads CONFIRMED in the next view. */
-const OBSERVED_INTEL_AGE = 0;
 
 /**
  * FOCUSED_ISR_SWEEP (RD-2a): sets the acting side's intel age for the region

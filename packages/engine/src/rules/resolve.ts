@@ -10,12 +10,16 @@ import type {
 } from "../contract/index.ts";
 import type { Rng } from "../rng.ts";
 import { createRng } from "../rng.ts";
+import { evaluateEnding } from "./endings.ts";
 import type { EventLog } from "./events.ts";
 import { createEventLog, visibleToAll, visibleToOnly } from "./events.ts";
 import { drawHands } from "./hands.ts";
 import { counterintelSweep, focusedIsrSweep, jammingCorridor, spoofContacts } from "./info.ts";
 import { findCard, isLegalTarget } from "./legality.ts";
+import { evaluateObjectives } from "./objectives.ts";
+import { politicalUpkeep, writeLastController } from "./political.ts";
 import type { OpOutcome } from "./state.ts";
+import { applyAttrition, recomputeSupply } from "./supply.ts";
 import {
   deliberateAdvance,
   fortifyRegion,
@@ -23,6 +27,13 @@ import {
   rapidRedeploy,
   secureCorridor,
 } from "./surface.ts";
+import {
+  ageIntel,
+  evaluateUnrest,
+  expireContacts,
+  expireLinkEffects,
+  recomputeAllControl,
+} from "./timers.ts";
 import { validateOrders } from "./validate.ts";
 
 /**
@@ -33,21 +44,27 @@ import { validateOrders } from "./validate.ts";
  *  1. validate both order sets against pre-turn state — here
  *  2. info ops (INFO domain)                          — here
  *  3. surface ops (SURFACE domain)                    — here
- *  4. supply recompute                                — T019, issue #15
+ *  4. supply recompute                                — `supply.ts`
  *  5. timers/decay (link effects, contact expiry,
- *     intel aging, unrest bookkeeping, attrition)     — T020, issue #15
- *  6. control recompute (all regions, RD-13)          — T021, issue #15
- *  7. unrest evaluation (RD-5)                        — T021, issue #15
- *  8. political upkeep (RD-4, RD-8)                   — T022, issue #15
- *  9. objective evaluation (RD-11)                    — T023, issue #15
- * 10. game-over evaluation (FR-012)                   — T023, issue #15
+ *     intel aging, attrition)                         — `timers.ts` + `supply.ts`
+ *  6. control recompute (all regions, RD-13)          — `timers.ts`
+ *  7. unrest evaluation (RD-5)                        — `timers.ts`
+ *  8. political upkeep (RD-4, RD-8)                   — `political.ts`
+ *  9. objective evaluation (RD-11)                    — `objectives.ts`
+ * 10. game-over evaluation (FR-012)                   — `endings.ts`
  * 11. turn increment (skipped once the game ends)     — here
  *
- * Phases 4–10 are absent, not stubbed: the body carries a numbered gap for
- * each so #15 lands its phase where RD-1 puts it, and nothing silently
- * "passes" a phase that does not exist yet. **Until they land, a resolved turn
- * moves presence, forts, link effects and contacts and nothing else** — no
- * supply, attrition, unrest, political drain, scoring, or ending.
+ * RD-8's `lastController` write is not one of RD-1's phases: it is the last
+ * act of evaluation, sitting between phase 10 and the increment, because two
+ * phases above it read the value it overwrites (review N7).
+ *
+ * RD-1's phase-5 parenthetical also names "unrest bookkeeping"; `timers.ts`
+ * records why that is vestigial — RD-5 reads turn-end control, so unrest can
+ * only be evaluated after phase 6, and it is evaluated exactly once.
+ *
+ * RD-1's phase list is complete as of issue #15: a resolved turn runs every
+ * phase, and the ending it may produce is computed once here and stored, never
+ * recomputed by a view (FR-012).
  */
 
 /** The seq the very first event of a game takes (the `gameCreated` header). */
@@ -132,6 +149,15 @@ interface TurnContext {
   log: EventLog;
   /** RD-2a's +1-fort-per-region-per-turn cap; per turn, not per side. */
   fortified: Set<string>;
+  /**
+   * RD-9's per-side "observed this turn" regions beyond own presence: those
+   * advanced into and those ISR-swept. Both facts are made in the ops phases
+   * and read by phase 5's intel aging, and neither survives in `GameState` —
+   * a sweep's age 0 is about to be incremented, and an advance's presence may
+   * be attritioned away — so the resolver carries them rather than the
+   * operation modules changing shape to return them.
+   */
+  observed: Record<Side, Set<string>>;
   /** RD-9 rumor substreams, forked once per side per turn (one draw per contact). */
   rumor: Record<Side, Rng>;
 }
@@ -185,6 +211,7 @@ export function resolveTurn(
     scenario,
     log,
     fortified: new Set<string>(),
+    observed: { BLUE: new Set<string>(), RED: new Set<string>() },
     rumor: {
       BLUE: createRng(state.seed).fork(`rumor:BLUE:${turn}`),
       RED: createRng(state.seed).fork(`rumor:RED:${turn}`),
@@ -195,26 +222,47 @@ export function resolveTurn(
   let next = resolvePhase(context, state, orders, order, "INFO");
   next = resolvePhase(context, next, orders, order, "SURFACE");
 
-  // Phase 4 — supply recompute (RD-12) — T019, issue #15.
-  // Phase 5 — timers/decay (RD-7, RD-9, RD-12) — T020, issue #15.
-  // Phase 6 — control recompute over every region (RD-13) — T021, issue #15.
-  // Phase 7 — unrest evaluation (RD-5) — T021, issue #15.
-  // Phase 8 — political upkeep and the RD-8 constraint — T022, issue #15.
-  // Phase 9 — objective evaluation (RD-11) — T023, issue #15.
-  // Phase 10 — game-over evaluation (FR-012) — T023, issue #15.
+  // Phase 4 — supply recompute (RD-12).
+  next = applySupply(context, next);
+  // Phase 5 — timers/decay (RD-7, RD-9, RD-12).
+  next = applyTimers(context, next);
+  // Phase 6 — control recompute over every region (RD-13).
+  next = applyControlRecompute(context, next);
+  // Phase 7 — unrest evaluation (RD-5), on phase 6's turn-end control.
+  next = applyUnrest(context, next);
 
-  // Phase 11 — turn increment. RD-1 skips it once the game has ended, which
-  // needs phase 10; #15 gates it on `next.gameOver`.
-  const upcoming = next.turn + 1;
-  const hands = drawHands(scenario, next.seed, upcoming);
-  next = {
-    ...next,
-    turn: upcoming,
-    sides: {
-      BLUE: { ...next.sides.BLUE, hand: hands.BLUE },
-      RED: { ...next.sides.RED, hand: hands.RED },
-    },
-  };
+  // Phase 8 — political upkeep and the RD-8 constraint (RD-4, RD-5, RD-8).
+  next = applyPolitical(context, next);
+
+  // Phase 9 — objective evaluation (RD-11).
+  next = applyObjectives(context, next);
+  // Phase 10 — game-over evaluation, pre-increment (FR-012, RD-11).
+  next = applyEnding(context, next);
+
+  // End of evaluation — RD-8's `lastController` snapshot (review N7).
+  //
+  // ORDERING WARNING: every phase that reads the previous turn's control
+  // belongs ABOVE this line, never below it — RD-5's unrest comparison in
+  // phase 7, RD-8's habitat-loss penalty in phase 8, and any later rule that
+  // quantifies over turn-end control. Moving the write up would blank those
+  // rules silently, with no test of theirs failing to say so.
+  next = writeLastController(next);
+
+  // Phase 11 — turn increment, skipped once the game has ended (RD-1). A
+  // finished game therefore keeps the turn its ending landed on, which is what
+  // `GameOverRecord.endedOnTurn` says, and draws no hand nobody will play.
+  if (next.gameOver === null) {
+    const upcoming = next.turn + 1;
+    const hands = drawHands(scenario, next.seed, upcoming);
+    next = {
+      ...next,
+      turn: upcoming,
+      sides: {
+        BLUE: { ...next.sides.BLUE, hand: hands.BLUE },
+        RED: { ...next.sides.RED, hand: hands.RED },
+      },
+    };
+  }
 
   return { state: next, events: [...log.events()] };
 }
@@ -274,6 +322,12 @@ function resolveOperation(
     context.fortified.add(targetId);
   }
 
+  // RD-9's two non-presence observations. Recorded only for an operation that
+  // actually applied: an advance or a sweep that fizzled observed nothing.
+  if (card.id === "DELIBERATE_ADVANCE" || card.id === "FOCUSED_ISR_SWEEP") {
+    context.observed[side].add(targetId);
+  }
+
   // Cloned before emission: the log deep-freezes what it is handed, and an
   // effect's `contact`/`effect` payload is the very object that also sits in
   // the returned state. History must never freeze live state, nor alias it.
@@ -330,6 +384,182 @@ function resolveOperation(
   }
 
   return outcome.state;
+}
+
+/**
+ * Phase 4 (RD-12): reassigns supply for every region and side.
+ *
+ * `supplyChanged` is stamped to the side it describes — `RegionView` exposes
+ * `ownSupply` only, so an enemy supply state is not a disclosed fact. Like
+ * #14's operation events these stamps are the conservative reading until T024
+ * (issue #16) builds the real observability model.
+ */
+function applySupply(context: TurnContext, state: GameState): GameState {
+  const { state: next, changes } = recomputeSupply(context.scenario, state);
+  for (const change of changes) {
+    context.log.emit(
+      {
+        kind: "supplyChanged",
+        regionId: change.regionId,
+        side: change.side,
+        from: change.from,
+        to: change.to,
+      },
+      visibleToOnly(change.side),
+    );
+  }
+  return next;
+}
+
+/**
+ * Phase 5 (RD-7, RD-9, RD-12), in the order RD-1 lists it: link effects,
+ * contact expiry, intel aging, attrition.
+ *
+ * That order is load-bearing in exactly one place. Aging reads "own presence
+ * > 0" as presence stands when it runs, so putting it ahead of attrition means
+ * a garrison attrition wipes out this turn still observed its region this
+ * turn. The two expiries commute with everything else here — nothing in this
+ * phase reads a link effect or a contact.
+ *
+ * Payloads are copied before emission: the log deep-freezes what it is handed,
+ * and these objects are still reachable from the state the caller passed in.
+ */
+function applyTimers(context: TurnContext, state: GameState): GameState {
+  const links = expireLinkEffects(state);
+  for (const { linkId, effect } of links.expired) {
+    context.log.emit(
+      { kind: "linkEffectExpired", linkId, effect: { ...effect } },
+      visibleToOnly(effect.side),
+    );
+  }
+
+  const contacts = expireContacts(links.state);
+  for (const contact of contacts.expired) {
+    context.log.emit(
+      { kind: "contactExpired", contact: { ...contact } },
+      visibleToOnly(contact.side),
+    );
+  }
+
+  const aged = ageIntel(contacts.state, context.observed);
+
+  const attrition = applyAttrition(aged);
+  for (const loss of attrition.losses) {
+    context.log.emit(
+      { kind: "attrition", regionId: loss.regionId, side: loss.side, amount: loss.amount },
+      visibleToOnly(loss.side),
+    );
+  }
+  return attrition.state;
+}
+
+/** Phase 6 (RD-13); control is fully disclosed in M1, so the flips are global. */
+function applyControlRecompute(context: TurnContext, state: GameState): GameState {
+  const { state: next, changes } = recomputeAllControl(state);
+  for (const change of changes) {
+    context.log.emit(
+      { kind: "controlChanged", regionId: change.regionId, from: change.from, to: change.to },
+      visibleToAll(),
+    );
+  }
+  return next;
+}
+
+/** Phase 7 (RD-5); `RegionView` carries unrest for both sides, as it does control. */
+function applyUnrest(context: TurnContext, state: GameState): GameState {
+  const { state: next, changes } = evaluateUnrest(state);
+  for (const change of changes) {
+    context.log.emit(
+      { kind: "unrestChanged", regionId: change.regionId, from: change.from, to: change.to },
+      visibleToAll(),
+    );
+  }
+  return next;
+}
+
+/**
+ * Phase 8 (RD-4, RD-8): charges both sides their political upkeep.
+ *
+ * `politicalChanged` carries the exact value, which SC-003 forbids disclosing
+ * to the enemy, so it is stamped acting-side-only pending T024's observability
+ * model (issue #16). `postureChanged` is the coarse figure both sides are
+ * meant to see, and RD-9 lists posture-band changes among the globally visible
+ * outcomes, so it is stamped to all.
+ */
+function applyPolitical(context: TurnContext, state: GameState): GameState {
+  const { state: next, drains, postures } = politicalUpkeep(context.scenario, state);
+  for (const drain of drains) {
+    context.log.emit(
+      {
+        kind: "politicalChanged",
+        side: drain.side,
+        from: drain.from,
+        to: drain.to,
+        cause: drain.cause,
+      },
+      visibleToOnly(drain.side),
+    );
+  }
+  for (const posture of postures) {
+    context.log.emit(
+      { kind: "postureChanged", side: posture.side, band: posture.band },
+      visibleToAll(),
+    );
+  }
+  return next;
+}
+
+/**
+ * Phase 9 (RD-11): evaluates every objective against the turn end.
+ *
+ * `objectiveCompleted` is stamped acting-side-only for now. RD-9 makes a
+ * *public* objective's completion enemy-visible while a secret one stays
+ * hidden, and that split needs the observability model T024/T025 builds
+ * (issue #16); under-disclosure is the safe default until then.
+ */
+function applyObjectives(context: TurnContext, state: GameState): GameState {
+  const { state: next, completions } = evaluateObjectives(context.scenario, state);
+  for (const completion of completions) {
+    const objective = context.scenario.objectives[completion.side].find(
+      (entry) => entry.id === completion.objectiveId,
+    );
+    context.log.emit(
+      {
+        kind: "objectiveCompleted",
+        objectiveId: completion.objectiveId,
+        side: completion.side,
+        // `evaluateObjectives` only ever completes an objective it read from
+        // this same scenario, so the fallback is unreachable and is the one
+        // branch here coverage cannot exercise; the type cannot know that.
+        points: objective?.points ?? 0,
+      },
+      visibleToOnly(completion.side),
+    );
+  }
+  return next;
+}
+
+/**
+ * Phase 10 (FR-012, RD-11): computes the ending once and stores it.
+ *
+ * A state that already carries a `gameOver` is left exactly as it is — the
+ * record is written once and never recomputed, which is the whole point of
+ * storing it (the prototype recomputed it per view and drifted). Resolving
+ * another turn on a finished game is a caller error, not a game outcome, so it
+ * neither re-decides the ending nor emits a second `gameEnded`.
+ */
+function applyEnding(context: TurnContext, state: GameState): GameState {
+  if (state.gameOver !== null) {
+    return state;
+  }
+  const record = evaluateEnding(context.scenario, state);
+  if (record === null) {
+    return state;
+  }
+  // Copied before emission: the log deep-freezes what it is handed, and the
+  // record it is handed is the very object the state stores.
+  context.log.emit({ kind: "gameEnded", record: { ...record } }, visibleToAll());
+  return { ...state, gameOver: record };
 }
 
 /** Records a skipped operation (RD-1); visible to the acting side only (A23). */

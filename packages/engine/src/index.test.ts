@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  ATTRITION_PER_TURN,
+  applyAttrition,
   CONTROL_MARGIN,
   type Config,
   ConfigSchema,
@@ -10,6 +12,10 @@ import {
   createRng,
   drawHand,
   effectiveCapacity,
+  evaluateEnding,
+  evaluateObjectives,
+  evaluateUnrest,
+  expireLinkEffects,
   fnv1a32,
   initiativeFor,
   type LlmConfig,
@@ -18,12 +24,18 @@ import {
   loadScenario,
   OrderSetSchema,
   OrderValidationError,
+  pointsFor,
+  politicalUpkeep,
+  postureBand,
+  recomputeAllControl,
+  recomputeSupply,
   resolveControl,
   resolveTurn,
   ScenarioLoadError,
   type ServerConfig,
   validateOrders,
   visibleToAll,
+  writeLastController,
 } from "./index.ts";
 
 const scenarioJson = JSON.parse(
@@ -51,6 +63,21 @@ describe("@shadow/engine entry point", () => {
     expect(initiativeFor(1)).toBe("BLUE");
     expect(OrderValidationError.prototype).toBeInstanceOf(Error);
     expect(CONTROL_MARGIN).toBe(10);
+  });
+
+  it("re-exports the consequence phases (issue #15)", () => {
+    expect(typeof recomputeSupply).toBe("function");
+    expect(typeof applyAttrition).toBe("function");
+    expect(typeof expireLinkEffects).toBe("function");
+    expect(typeof recomputeAllControl).toBe("function");
+    expect(typeof evaluateUnrest).toBe("function");
+    expect(typeof politicalUpkeep).toBe("function");
+    expect(typeof writeLastController).toBe("function");
+    expect(postureBand(20)).toBe("STABLE");
+    expect(typeof evaluateObjectives).toBe("function");
+    expect(typeof pointsFor).toBe("function");
+    expect(typeof evaluateEnding).toBe("function");
+    expect(ATTRITION_PER_TURN).toBe(2);
   });
 
   it("re-exports the contract schemas", () => {
